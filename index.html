@@ -16,7 +16,6 @@
             background-color: #f3f4f6;
             user-select: none;
         }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -40,16 +39,63 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* リアルな土の畑スタイル */
+        .farm-soil {
+            background: radial-gradient(circle at 30% 30%, #6e4e37 0%, #4a3222 60%, #2e1d13 100%);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 4px rgba(255,255,255,0.1), 0 8px 16px rgba(0,0,0,0.3);
+            border: 4px solid #3d2516;
+            position: relative;
+        }
+        .farm-soil::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 12px,
+                rgba(255, 255, 255, 0.05) 12px,
+                rgba(255, 255, 255, 0.05) 24px
+            );
+            pointer-events: none;
+            border-radius: inherit;
+        }
+        .farm-soil.watered {
+            background: radial-gradient(circle at 30% 30%, #3a281c 0%, #24170e 60%, #120a05 100%);
+            border-color: #1a0f08;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 15px rgba(56, 189, 248, 0.2), 0 8px 16px rgba(0,0,0,0.4);
+        }
+        .soil-texture {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 0);
+            background-size: 10px 10px;
+        }
+        .shimmer-ready {
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.8), inset 0 0 10px rgba(254, 240, 138, 0.4);
+            border-color: #f59e0b !important;
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #f59e0b; box-shadow: 0 0 15px rgba(234, 179, 8, 0.7); }
+            50% { border-color: #fef08a; box-shadow: 0 0 25px rgba(250, 204, 21, 0.9); }
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col pb-12">
 
     <!-- Top Header Navigation -->
-    <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-30">
+    <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-30 border-b border-emerald-900">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-wheat-awn text-2xl text-amber-300"></i>
-                <h1 class="font-extrabold text-xl tracking-wide">アグリファーム & Friends</h1>
+                <div class="w-10 h-10 rounded-full bg-amber-400 border-2 border-amber-200 flex items-center justify-center text-emerald-900 text-xl shadow">
+                    <i class="fa-solid fa-wheat-awn"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-wide flex items-center gap-2">
+                        リアルアグリファーム <span class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full text-emerald-100 border border-emerald-400">プロ版</span>
+                    </h1>
+                    <p class="text-[10px] text-emerald-200">自然の恵みを育てるリアル栽培シミュレーション</p>
+                </div>
             </div>
 
             <!-- Currency & Level Display -->
@@ -65,381 +111,363 @@
                 </div>
             </div>
 
-            <!-- User Auth Profile Controls -->
+            <!-- User Profile Controls & Auth Status -->
             <div class="flex items-center space-x-2">
-                <button id="authBtn" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-3 py-1.5 rounded-xl shadow transition text-xs flex items-center gap-1.5">
-                    <i class="fa-brands fa-google"></i>
-                    <span id="authBtnText">ログイン</span>
-                </button>
-                <button id="reportModalBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl border border-emerald-400 shadow text-xs flex items-center gap-1" title="課題提出メモ作成">
-                    <i class="fa-solid fa-clipboard-list text-amber-300"></i>
+                <div id="authContainer" class="flex items-center gap-2">
+                    <button id="googleAuthBtn" class="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow transition">
+                        <i class="fa-brands fa-google"></i>
+                        <span id="googleAuthText">Googleログイン</span>
+                    </button>
+                </div>
+                <button id="openSubmitMemoBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow transition">
+                    <i class="fa-solid fa-file-pen"></i>
                     <span>提出メモ</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Tab Controls -->
-    <nav class="bg-white border-b border-slate-200 sticky top-[57px] z-20 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto">
-            <button onclick="switchTab('farm')" id="tab-farm" class="tab-btn py-3 px-4 font-bold border-b-4 border-emerald-600 text-emerald-700 flex items-center gap-2 whitespace-nowrap">
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-[61px] z-20">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-2 overflow-x-auto">
+            <button onclick="switchTab('farm')" id="tabBtn-farm" class="tab-btn px-4 py-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-tractor"></i> 自分の農場
             </button>
-            <button onclick="switchTab('shop')" id="tab-shop" class="tab-btn py-3 px-4 font-bold border-b-4 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-store"></i> ショップ（種・肥料）
+            <button onclick="switchTab('shop')" id="tabBtn-shop" class="tab-btn px-4 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-store"></i> ショップ (種・肥料)
             </button>
-            <button onclick="switchTab('market')" id="tab-market" class="tab-btn py-3 px-4 font-bold border-b-4 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-cart-shopping"></i> 野菜市場（売却）
+            <button onclick="switchTab('market')" id="tabBtn-market" class="tab-btn px-4 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-dumpster-fire"></i> 野菜市場 (売却)
             </button>
-            <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn py-3 px-4 font-bold border-b-4 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap relative">
-                <i class="fa-solid fa-user-group"></i> フレンド & チャット
-                <span id="chatBadge" class="hidden absolute top-2 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+            <button onclick="switchTab('friends')" id="tabBtn-friends" class="tab-btn px-4 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap relative">
+                <i class="fa-solid fa-user-group"></i> フレンド＆チャット
+                <span id="unreadBadge" class="hidden absolute top-2 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
             </button>
-            <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-btn py-3 px-4 font-bold border-b-4 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-trophy text-amber-500"></i> 出荷ランキング
+            <button onclick="switchTab('ranking')" id="tabBtn-ranking" class="tab-btn px-4 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-emerald-600 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-trophy"></i> 出荷ランキング
             </button>
         </div>
     </nav>
 
-    <!-- Main Content Container -->
+    <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
 
-        <!-- TAB 1: FARM SCREEN -->
-        <div id="view-farm" class="tab-view space-y-6">
-            <!-- Farm Action Bar -->
-            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-wrap justify-between items-center gap-3">
+        <!-- TAB 1: Farm View -->
+        <div id="tab-farm" class="tab-content">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 mb-6 text-white shadow-md flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
-                        <i class="fa-solid fa-seedling text-emerald-600"></i> 農場の畑
+                    <h2 class="font-extrabold text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-seedling"></i> 農場の畑
                     </h2>
-                    <p class="text-xs text-emerald-700">空き地をタップして種をまき、水や肥料をあげて育てましょう！</p>
+                    <p class="text-xs text-emerald-100">空き地をタップして種をまき、水や肥料をあげて育てましょう！</p>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="waterAllPlots()" class="bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow flex items-center gap-1">
+                <div class="flex gap-2">
+                    <button onclick="waterAllPlots()" class="bg-sky-500 hover:bg-sky-400 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
                         <i class="fa-solid fa-droplet"></i> 一括水やり
                     </button>
-                    <button onclick="harvestAllPlots()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-2 rounded-xl shadow flex items-center gap-1">
-                        <i class="fa-solid fa-sickle"></i> 一括収穫
+                    <button onclick="harvestAllPlots()" class="bg-amber-500 hover:bg-amber-400 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
+                        <i class="fa-solid fa-hand-holding-hand"></i> 一括収穫
                     </button>
                 </div>
             </div>
 
-            <!-- Plots Grid -->
-            <div id="plotsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <!-- Dynamic Plot Cards Rendered by JS -->
-            </div>
-
-            <!-- Seed & Fertilizer Inventory Quick Selection -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-                <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-box-archive text-emerald-600"></i> 所持している資材（種・肥料）
-                </h3>
-                <div id="inventoryQuickList" class="flex flex-wrap gap-3">
-                    <!-- Dynamic Inventory Items -->
-                </div>
+            <!-- Farm Soil Grid -->
+            <div id="farmGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Dynamic Plots Generated Here -->
             </div>
         </div>
 
-        <!-- TAB 2: SHOP SCREEN -->
-        <div id="view-shop" class="tab-view hidden space-y-6">
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                <h2 class="text-lg font-bold text-amber-900 flex items-center gap-2">
-                    <i class="fa-solid fa-store text-amber-600"></i> 農場マート（資材ショップ）
+        <!-- TAB 2: Shop View -->
+        <div id="tab-shop" class="tab-content hidden">
+            <div class="mb-6">
+                <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-store text-emerald-600"></i> アグリショップ
                 </h2>
-                <p class="text-xs text-amber-800">農産物を売って貯めたお金（G）で種や肥料を購入できます。</p>
+                <p class="text-xs text-slate-500">販売して得たゴールド（G）で新しい種や高品質な肥料を購入できます</p>
             </div>
 
-            <!-- Shop Items Category Header -->
-            <h3 class="font-bold text-slate-700 text-md border-l-4 border-emerald-600 pl-2">🌱 種の購入</h3>
-            <div id="seedShopGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- Dynamic Seeds Rendered by JS -->
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Seed Shop -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-base text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-seedling text-emerald-500"></i> 種の購入
+                    </h3>
+                    <div id="seedShopList" class="space-y-3">
+                        <!-- Seeds items generated dynamically -->
+                    </div>
+                </div>
 
-            <h3 class="font-bold text-slate-700 text-md border-l-4 border-amber-600 pl-2 mt-8">🧪 肥料・便利アイテム</h3>
-            <div id="fertilizerShopGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <!-- Dynamic Fertilizers Rendered by JS -->
+                <!-- Fertilizer & Upgrade Shop -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-base text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-flask-vial text-amber-500"></i> 肥料・資材の購入
+                    </h3>
+                    <div id="itemShopList" class="space-y-3">
+                        <!-- Items generated dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- TAB 3: MARKET SCREEN -->
-        <div id="view-market" class="tab-view hidden space-y-6">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex justify-between items-center">
+        <!-- TAB 3: Market View -->
+        <div id="tab-market" class="tab-content hidden">
+            <div class="bg-gradient-to-r from-amber-600 to-orange-500 rounded-2xl p-4 mb-6 text-white shadow-md flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
-                        <i class="fa-solid fa-building-wheat text-emerald-600"></i> 中央農産物卸売市場
+                    <h2 class="font-extrabold text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> 野菜中央市場
                     </h2>
-                    <p class="text-xs text-emerald-700">収穫した野菜を出荷してゴールド（G）を獲得します。</p>
+                    <p class="text-xs text-amber-100">収穫した野菜を売却して資金（G）を獲得します。相場は変動します！</p>
                 </div>
-                <button onclick="sellAllHarvested()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow">
-                    すべて一括売却
+                <button onclick="sellAllCrops()" class="bg-amber-300 hover:bg-amber-200 text-amber-950 px-4 py-2 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
+                    <i class="fa-solid fa-sack-dollar"></i> すべて一括売却
                 </button>
             </div>
 
-            <!-- Crop Inventory List -->
-            <div id="marketCropList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <!-- Dynamic Harvested Crops List -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <h3 class="font-bold text-base text-slate-700 border-b pb-3 mb-4 flex items-center justify-between">
+                    <span><i class="fa-solid fa-warehouse text-emerald-600"></i> 所有インベントリ</span>
+                    <span class="text-xs text-slate-400 font-normal">タップして個別に売却</span>
+                </h3>
+                <div id="inventoryList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Inventory items generated dynamically -->
+                </div>
             </div>
         </div>
 
-        <!-- TAB 4: FRIENDS & CHAT SCREEN -->
-        <div id="view-friends" class="tab-view hidden space-y-6">
+        <!-- TAB 4: Friends & Chat View -->
+        <div id="tab-friends" class="tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: My User ID & Friend Search -->
-                <div class="space-y-4">
-                    <!-- My Profile Card -->
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-id-card text-emerald-600"></i> あなたのユーザー情報
-                        </h3>
-                        <p class="text-xs text-slate-500 mb-2">IDを友達に共有してフレンドになりましょう：</p>
-                        <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl text-xs font-mono border">
-                            <span id="myUserIdText" class="truncate flex-1 font-semibold text-slate-800">未ログイン</span>
-                            <button onclick="copyMyUserId()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
-                                コピー
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Friend Add Search Card -->
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-plus text-emerald-600"></i> フレンド検索・申請
-                        </h3>
-                        <div class="space-y-2">
-                            <input id="targetFriendIdInput" type="text" placeholder="相手のユーザーIDを入力..." class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <button onclick="sendFriendRequest()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 rounded-xl shadow transition">
-                                フレンド申請を送信
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Pending Friend Requests -->
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-envelope-open-text text-amber-500"></i> 届いているフレンド申請
-                        </h3>
-                        <div id="pendingRequestsList" class="space-y-2 max-h-48 overflow-y-auto text-xs">
-                            <p class="text-slate-400 italic py-2 text-center">届いている申請はありません</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Middle Column: Friends List -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
-                    <h3 class="font-bold text-sm text-slate-700 mb-3 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-emerald-600"></i> フレンド一覧</span>
-                        <span id="friendCountBadge" class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">0人</span>
+                <!-- Friends Sidebar -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col h-[550px]">
+                    <h3 class="font-bold text-base text-slate-700 pb-3 border-b flex items-center justify-between">
+                        <span><i class="fa-solid fa-users text-emerald-600"></i> フレンド一覧</span>
+                        <button onclick="openAddFriendModal()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold px-2.5 py-1 rounded-lg transition">
+                            + ID検索
+                        </button>
                     </h3>
-                    <div id="friendsList" class="flex-1 overflow-y-auto space-y-2 pr-1">
-                        <!-- Dynamic Friends Items -->
+
+                    <!-- Friend Search Request Info -->
+                    <div id="userUidBox" class="mt-2 p-2 bg-slate-50 border rounded-xl text-xs text-slate-600 flex justify-between items-center">
+                        <span class="truncate">自分のID: <span id="myUidDisplay" class="font-mono font-bold text-emerald-700">未ログイン</span></span>
+                        <button onclick="copyMyUid()" class="text-emerald-600 hover:underline text-[11px] font-bold">コピー</button>
+                    </div>
+
+                    <!-- Friend Request Alerts -->
+                    <div id="friendRequestsContainer" class="mt-2 space-y-1"></div>
+
+                    <!-- Friend List Scrollable -->
+                    <div id="friendList" class="flex-1 overflow-y-auto mt-3 space-y-2 pr-1">
+                        <div class="text-center text-slate-400 text-xs py-8">フレンドがいません。<br>IDを共有してフレンドを追加しましょう！</div>
                     </div>
                 </div>
 
-                <!-- Right Column: Active Friend Chat Box -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px]">
-                    <!-- Chat Header -->
-                    <div class="p-3 border-b bg-slate-50 rounded-t-2xl flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm">
+                <!-- Chat Room Section -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col h-[550px]">
+                    <div id="chatHeader" class="border-b pb-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold">
                                 <i class="fa-solid fa-comments"></i>
                             </div>
                             <div>
-                                <h4 id="activeChatFriendName" class="font-bold text-xs text-slate-800">相手を選択してください</h4>
-                                <p id="activeChatFriendStatus" class="text-[10px] text-slate-400">メッセージを送受信できます</p>
+                                <h4 id="chatTargetName" class="font-bold text-slate-800 text-sm">フレンドを選択してください</h4>
+                                <p id="chatTargetStatus" class="text-[10px] text-slate-400">リアルタイムチャット</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chat Message Stream -->
-                    <div id="chatMessageStream" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs bg-slate-50/50">
-                        <div class="text-center text-slate-400 italic my-auto py-10">
-                            左のフレンド一覧からチャット相手を選んでください。
+                    <!-- Chat Messages Scroll -->
+                    <div id="chatMessageList" class="flex-1 overflow-y-auto my-3 space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+                            <i class="fa-regular fa-paper-plane text-2xl mb-2"></i>
+                            <p>左側のフレンドリストから相手を選んでチャットを開始します</p>
                         </div>
                     </div>
 
-                    <!-- Chat Input Controls -->
-                    <div class="p-2 border-t bg-white rounded-b-2xl flex gap-2">
-                        <input id="chatInput" type="text" placeholder="メッセージを入力..." class="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" disabled>
-                        <button id="sendChatBtn" onclick="sendChatMessage()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs disabled:opacity-50 transition" disabled>
+                    <!-- Chat Input Box -->
+                    <form id="chatForm" onsubmit="sendChatMessage(event)" class="flex gap-2 pt-1">
+                        <input type="text" id="chatInput" placeholder="メッセージを入力..." disabled class="flex-1 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 disabled:opacity-50">
+                        <button type="submit" id="chatSendBtn" disabled class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl text-sm transition disabled:opacity-50">
                             送信
                         </button>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 5: RANKING SCREEN -->
-        <div id="view-ranking" class="tab-view hidden space-y-6">
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                <h2 class="text-lg font-bold text-amber-900 flex items-center gap-2">
-                    <i class="fa-solid fa-trophy text-amber-500"></i> 全国農家累計出荷額ランキング
-                </h2>
-                <p class="text-xs text-amber-800">出荷額の累計成績で全国の農家と競い合おう！</p>
-            </div>
+        <!-- TAB 5: Leaderboard / Ranking -->
+        <div id="tab-ranking" class="tab-content hidden">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 max-w-3xl mx-auto">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl mb-2">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-slate-800">全国農家・出荷額ランキング</h2>
+                    <p class="text-xs text-slate-500">丹精込めて育てた野菜の累計出荷ゴールドで全国の農家と勝負！</p>
+                </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-100 border-b text-slate-600 font-bold">
-                        <tr>
-                            <th class="p-3 text-center w-16">順位</th>
-                            <th class="p-3">農家名 (ユーザー)</th>
-                            <th class="p-3 text-right">累計出荷額</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rankingTableBody" class="divide-y divide-slate-100">
-                        <!-- Dynamic Ranking Items -->
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 border-b">
+                            <tr>
+                                <th class="p-3 text-center">順位</th>
+                                <th class="p-3">農家名 (プレイヤー)</th>
+                                <th class="p-3 text-right">累計出荷額</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTableBody" class="divide-y">
+                            <!-- Ranking Dynamic Generation -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal 1: Seed Selection Modal for Planting -->
-    <div id="plantSeedModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-md text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-wheat-awn text-emerald-600"></i> 何の種を植えますか？
+    <!-- Modal: Plant Crop Choice -->
+    <div id="plantModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl crop-pop-anim">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-seedling text-emerald-600"></i> 植える種を選択</h3>
+                <button onclick="closeModal('plantModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="plantModalList" class="space-y-2 max-h-80 overflow-y-auto">
+                <!-- Seed options -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Friend Search -->
+    <div id="friendModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl crop-pop-anim">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-user-plus text-emerald-600"></i> フレンド検索・申請</h3>
+                <button onclick="closeModal('friendModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-xs text-slate-500">相手のユーザーID (UID) を入力してフレンド申請を送ります。</p>
+                <div>
+                    <input type="text" id="targetUidInput" placeholder="相手のUIDを入力..." class="w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <button onclick="sendFriendRequest()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition">
+                    申請を送信する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Assignment Memo Helper -->
+    <div id="submitMemoModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl max-h-[90vh] flex flex-col crop-pop-anim">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-list text-indigo-600"></i> 授業課題提出フォーム用下書きメモ
                 </h3>
-                <button onclick="closePlantModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <button onclick="closeModal('submitMemoModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div id="modalSeedSelectionList" class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
-                <!-- Dynamically populated from Seeds Inventory -->
+            <p class="text-xs text-slate-500 mb-3">Googleフォームの回答にそのままコピー＆ペーストして利用できます。</p>
+            <div class="flex-1 overflow-y-auto bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs font-mono space-y-3" id="submitMemoText">
+                <!-- Text automatically constructed via JS -->
             </div>
-        </div>
-    </div>
-
-    <!-- Modal 2: Daily Login Bonus Modal -->
-    <div id="loginBonusModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-all border-4 border-amber-300">
-            <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-500 text-3xl">
-                <i class="fa-solid fa-gift"></i>
-            </div>
-            <h3 class="font-black text-xl text-slate-800">デイリーログインボーナス！</h3>
-            <p class="text-xs text-slate-500">本日のご来場ありがとうございます。プレゼントをお受け取りください！</p>
-            <div id="bonusDetailBox" class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-xs text-amber-900 font-bold">
-                + 500 G & トマトの種 × 3
-            </div>
-            <button onclick="closeLoginBonusModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold py-3 rounded-2xl shadow transition">
-                受け取ってプレイ！
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal 3: Class Assignment Report Note Generator -->
-    <div id="reportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-md text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-file-pen text-emerald-600"></i> 課題提出フォーム回答メモ generator
-                </h3>
-                <button onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-500">Googleフォームの回答項目1〜9に対応した下書き文です。「全テキストをコピー」を押して提出フォームに貼り付けて活用してください。</p>
-            <div class="flex-1 overflow-y-auto bg-slate-50 p-4 rounded-2xl border text-xs text-slate-700 font-mono whitespace-pre-wrap leading-relaxed" id="reportTextContent">
-                <!-- Pre-filled Report Answers -->
-            </div>
-            <div class="flex justify-end space-x-2 pt-2 border-t">
-                <button onclick="copyReportText()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow">
-                    <i class="fa-regular fa-copy"></i> テキストをクリップボードにコピー
+            <div class="mt-4 pt-3 border-t flex justify-end gap-2">
+                <button onclick="copySubmitMemo()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-copy"></i> テキスト全体をコピー
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast Element -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 text-xs font-semibold flex items-center gap-2">
-        <i class="fa-solid fa-circle-check text-emerald-400" id="toastIcon"></i>
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 z-50 flex items-center gap-2 pointer-events-none">
+        <i class="fa-solid fa-circle-info text-emerald-400"></i>
         <span id="toastMsg">通知メッセージ</span>
     </div>
 
-    <!-- Firebase SDK Modules -->
+    <!-- FIREBASE MODULE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import {
-            getAuth,
-            signInAnonymously,
-            signInWithCustomToken,
-            signInWithPopup,
-            GoogleAuthProvider,
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signOut, 
             onAuthStateChanged,
-            signOut
+            signInWithCustomToken,
+            signInAnonymously
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import {
-            getFirestore,
-            doc,
-            getDoc,
-            setDoc,
-            updateDoc,
-            collection,
-            onSnapshot,
-            query,
-            addDoc,
-            serverTimestamp
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc, 
+            updateDoc, 
+            collection, 
+            query, 
+            onSnapshot, 
+            addDoc, 
+            serverTimestamp,
+            getDocs
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Firebase Configuration Setup
-       const firebaseConfig = {
-  apiKey: "AIzaSyA5b5Hj5N8QF_29okQnXDIQFeNksdIqujY",
-  authDomain: "apuri-4932c.firebaseapp.com",
-  projectId: "apuri-4932c",
-  storageBucket: "apuri-4932c.firebasestorage.app",
-  messagingSenderId: "372405982327",
-  appId: "1:372405982327:web:d50f68eb10302007e9e272"
-  };
+        // 指定された Firebase 設定情報
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5b5Hj5N8QF_29okQnXDIQFeNksdIqujY",
+            authDomain: "apuri-4932c.firebaseapp.com",
+            projectId: "apuri-4932c",
+            storageBucket: "apuri-4932c.firebasestorage.app",
+            messagingSenderId: "372405982327",
+            appId: "1:372405982327:web:d50f68eb10302007e9e272"
+        };
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agri-farm-app';
-
-        // Initialize Firebase
+        // Firebase初期化
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
 
-        // Master Crop Data Catalog
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agri-farm-app';
+
+        // -------------------------------------------------------------
+        // GAME DEFINITIONS & SEEDS DATA
+        // -------------------------------------------------------------
         const CROPS = {
-            tomato: { name: 'トマト', growTime: 12, cost: 30, price: 60, icon: '🍅', unlockLevel: 1 },
-            cabbage: { name: 'キャベツ', growTime: 25, cost: 70, price: 150, icon: '🥬', unlockLevel: 1 },
-            strawberry: { name: 'イチゴ', growTime: 45, cost: 150, price: 350, icon: '🍓', unlockLevel: 2 },
-            corn: { name: 'トウモロコシ', growTime: 70, cost: 300, price: 750, icon: '🌽', unlockLevel: 3 },
-            melon: { name: '高級メロン', growTime: 120, cost: 800, price: 2200, icon: '🍈', unlockLevel: 5 }
+            radish: { name: 'ラディッシュ', icon: '🌱', growSec: 10, buyCost: 20, basePrice: 45, reqLevel: 1, img: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=120&q=80' },
+            carrot: { name: 'にんじん', icon: '🥕', growSec: 25, buyCost: 50, basePrice: 120, reqLevel: 1, img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=120&q=80' },
+            tomato: { name: 'トマト', icon: '🍅', growSec: 60, buyCost: 120, basePrice: 310, reqLevel: 2, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=120&q=80' },
+            strawberry: { name: 'いちご', icon: '🍓', growSec: 120, buyCost: 300, basePrice: 850, reqLevel: 3, img: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=120&q=80' },
+            pumpkin: { name: 'かぼちゃ', icon: '🎃', growSec: 300, buyCost: 800, basePrice: 2400, reqLevel: 4, img: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=120&q=80' }
         };
 
-        const FERTILIZERS = {
-            speed: { name: '急速肥料', effect: '成長時間を15秒短縮', cost: 100, icon: '⚡' },
-            super: { name: 'スーパー成長剤', effect: '成長時間を50秒短縮', cost: 300, icon: '🧪' }
+        const ITEMS = {
+            fertilizer: { name: '高速成長肥料', desc: '選択した作物の成長時間を30秒短縮', price: 80, icon: '🧪' }
         };
 
-        // Game Application State
-        let currentUser = null;
-        let activeSelectedPlotIndex = null;
-        let activeChatFriendId = null;
-        let chatUnsubscribe = null;
-
-        // User Game Data Model
+        // Default Game State
         let gameState = {
-            gold: 1000,
+            gold: 500,
             level: 1,
             totalSales: 0,
-            lastLoginDate: '',
-            seeds: { tomato: 3, cabbage: 1, strawberry: 0, corn: 0, melon: 0 },
-            fertilizers: { speed: 1, super: 0 },
-            harvestedCrops: { tomato: 0, cabbage: 0, strawberry: 0, corn: 0, melon: 0 },
+            inventory: { radish: 2 }, // Harvested veggies
+            seeds: { radish: 3, carrot: 1 }, // Seed count
+            items: { fertilizer: 2 },
             plots: [
-                { id: 0, cropKey: null, plantedAt: null, watered: false },
-                { id: 1, cropKey: null, plantedAt: null, watered: false },
-                { id: 2, cropKey: null, plantedAt: null, watered: false },
-                { id: 3, cropKey: null, plantedAt: null, watered: false },
-                { id: 4, cropKey: null, plantedAt: null, watered: false },
-                { id: 5, cropKey: null, plantedAt: null, watered: false }
+                { cropId: null, plantedAt: 0, watered: false },
+                { cropId: null, plantedAt: 0, watered: false },
+                { cropId: null, plantedAt: 0, watered: false },
+                { cropId: null, plantedAt: 0, watered: false },
+                { cropId: null, plantedAt: 0, watered: false },
+                { cropId: null, plantedAt: 0, watered: false }
             ]
         };
 
-        // Auth Listener Engine
+        let currentUser = null;
+        let selectedPlotIndex = null;
+        let activeChatFriendUid = null;
+        let chatUnsubscribe = null;
+
+        // -------------------------------------------------------------
+        // AUTHENTICATION LOGIC
+        // -------------------------------------------------------------
         async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -448,858 +476,793 @@
                     await signInAnonymously(auth);
                 }
             } catch (err) {
-                console.warn("Auth initialization fallback to anonymous login:", err);
-                try { await signInAnonymously(auth); } catch(e){}
+                console.warn("Auth fallback trigger:", err);
             }
         }
 
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
+            updateAuthUI();
             if (user) {
-                document.getElementById('myUserIdText').innerText = user.uid;
-                document.getElementById('authBtnText').innerText = user.isAnonymous ? "Googleログイン" : "ログアウト";
-
-                // Load User Cloud Save
+                document.getElementById('myUidDisplay').innerText = user.uid;
                 await loadUserData();
-                checkDailyBonus();
-                subscribeToFriendsAndRequests();
-                subscribeToGlobalRanking();
+                listenToFriends();
+                listenToFriendRequests();
+                updateLeaderboard();
             }
         });
 
-        // Google Sign-In Trigger
-        window.handleAuthClick = async function() {
+        document.getElementById('googleAuthBtn').addEventListener('click', async () => {
             if (currentUser && !currentUser.isAnonymous) {
                 await signOut(auth);
                 showToast("ログアウトしました");
-                location.reload();
             } else {
-                const provider = new GoogleAuthProvider();
                 try {
-                    await signInWithPopup(auth, provider);
+                    await signInWithPopup(auth, googleProvider);
                     showToast("Googleアカウントでログインしました！");
-                } catch (error) {
-                    console.error("Google login error:", error);
-                    showToast("ログインに失敗しました: " + error.message, true);
+                } catch (e) {
+                    console.error("Google login error:", e);
+                    showToast("ログインに失敗しました: " + e.message);
                 }
             }
-        };
+        });
 
-        document.getElementById('authBtn').addEventListener('click', window.handleAuthClick);
+        function updateAuthUI() {
+            const authText = document.getElementById('googleAuthText');
+            if (currentUser && !currentUser.isAnonymous) {
+                authText.innerText = (currentUser.displayName || 'ユーザー') + " (ログアウト)";
+            } else {
+                authText.innerText = "Googleログイン";
+            }
+        }
 
-        // Load User Data from Firestore
+        // -------------------------------------------------------------
+        // FIRESTORE STORAGE SYNC (RULE 1 & 2 SAFE)
+        // -------------------------------------------------------------
         async function loadUserData() {
             if (!currentUser) return;
-            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'gameState');
+            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'farmData', 'main');
             try {
                 const snap = await getDoc(userDocRef);
                 if (snap.exists()) {
                     const data = snap.data();
-                    gameState = { ...gameState, ...data };
+                    if (data.gameState) {
+                        gameState = { ...gameState, ...data.gameState };
+                    }
                 } else {
                     await saveUserData();
                 }
-            } catch (err) {
-                console.error("Error reading user state:", err);
+            } catch (e) {
+                console.error("Data load error:", e);
             }
-            renderAllViews();
+            renderAll();
         }
 
-        // Save User Data to Firestore
         async function saveUserData() {
             if (!currentUser) return;
-            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'gameState');
-            try {
-                await setDoc(userDocRef, gameState, { merge: true });
-                updatePublicRankingData();
-            } catch (err) {
-                console.error("Error saving user state:", err);
-            }
-        }
+            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'farmData', 'main');
+            const publicUserRef = doc(db, 'artifacts', appId, 'public', 'data', 'rankings', currentUser.uid);
 
-        // Update Public Ranking Firestore Collection
-        async function updatePublicRankingData() {
-            if (!currentUser) return;
-            const rankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rankings', currentUser.uid);
             try {
-                await setDoc(rankDocRef, {
+                await setDoc(userDocRef, { gameState, updatedAt: serverTimestamp() }, { merge: true });
+                
+                // Public ranking data
+                await setDoc(publicUserRef, {
                     uid: currentUser.uid,
-                    displayName: currentUser.displayName || `農家#${currentUser.uid.substring(0,4)}`,
+                    displayName: currentUser.displayName || '匿名農家',
                     totalSales: gameState.totalSales || 0,
                     level: gameState.level || 1,
                     updatedAt: serverTimestamp()
                 }, { merge: true });
             } catch (e) {
-                console.error("Error updating ranking:", e);
+                console.error("Save error:", e);
             }
         }
 
-        function checkDailyBonus() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            if (gameState.lastLoginDate !== todayStr) {
-                gameState.lastLoginDate = todayStr;
-                gameState.gold += 500;
-                gameState.seeds.tomato = (gameState.seeds.tomato || 0) + 3;
-                gameState.fertilizers.speed = (gameState.fertilizers.speed || 0) + 1;
-                saveUserData();
-
-                document.getElementById('loginBonusModal').classList.remove('hidden');
-            }
-        }
-
-        window.closeLoginBonusModal = function() {
-            document.getElementById('loginBonusModal').classList.add('hidden');
-            renderAllViews();
-        };
-
-        // Main Render Dispatcher
-        function renderAllViews() {
-            document.getElementById('goldDisplay').innerText = gameState.gold.toLocaleString();
-            document.getElementById('levelDisplay').innerText = gameState.level;
-
-            renderPlots();
-            renderQuickInventory();
+        // -------------------------------------------------------------
+        // RENDER FUNCTIONS
+        // -------------------------------------------------------------
+        function renderAll() {
+            renderHeaderStats();
+            renderFarmGrid();
             renderShop();
             renderMarket();
-            updateReportText();
         }
 
-        // Render Farm Plots Grid
-        function renderPlots() {
-            const grid = document.getElementById('plotsGrid');
+        function renderHeaderStats() {
+            document.getElementById('goldDisplay').innerText = gameState.gold.toLocaleString();
+            document.getElementById('levelDisplay').innerText = gameState.level;
+        }
+
+        function renderFarmGrid() {
+            const grid = document.getElementById('farmGrid');
             grid.innerHTML = '';
 
             gameState.plots.forEach((plot, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-white border-2 border-emerald-100 rounded-2xl p-3 flex flex-col justify-between items-center h-44 shadow-sm hover:shadow-md transition relative overflow-hidden";
+                const div = document.createElement('div');
+                const isWatered = plot.watered;
+                let statusContent = '';
 
-                if (!plot.cropKey) {
-                    // Empty Plot
-                    card.innerHTML = `
-                        <div class="my-auto text-center cursor-pointer" onclick="openPlantModal(${index})">
-                            <div class="w-12 h-12 bg-amber-100/80 rounded-full flex items-center justify-center mx-auto mb-1 text-amber-700 text-xl hover:scale-110 transition">
-                                <i class="fa-solid fa-plus"></i>
-                            </div>
-                            <span class="text-xs font-bold text-amber-900">空き地</span>
-                            <p class="text-[10px] text-slate-400">タップして種まき</p>
+                if (!plot.cropId) {
+                    // Empty Soil Plot
+                    div.className = `farm-soil soil-texture ${isWatered ? 'watered' : ''} rounded-2xl h-44 flex flex-col items-center justify-center cursor-pointer transition hover:scale-105 p-3 text-center`;
+                    statusContent = `
+                        <div class="w-12 h-12 rounded-full bg-amber-950/40 border border-amber-600/40 flex items-center justify-center text-amber-200/80 text-xl mb-1 shadow-inner">
+                            <i class="fa-solid fa-plus"></i>
                         </div>
+                        <span class="text-xs font-bold text-amber-100/90 drop-shadow">空き地</span>
+                        <span class="text-[10px] text-amber-300/70">タップして種まき</span>
                     `;
+                    div.onclick = () => openPlantModal(index);
                 } else {
-                    // Growing / Harvestable Plot
-                    const crop = CROPS[plot.cropKey];
-                    const elapsedSec = Math.floor((Date.now() - plot.plantedAt) / 1000);
-                    const isWatered = plot.watered;
-                    const effectiveGrowTime = isWatered ? Math.floor(crop.growTime * 0.7) : crop.growTime;
-                    const remainingSec = Math.max(0, effectiveGrowTime - elapsedSec);
-                    const isReady = remainingSec === 0;
+                    // Planted Crop Plot
+                    const crop = CROPS[plot.cropId];
+                    const now = Math.floor(Date.now() / 1000);
+                    const elapsed = now - plot.plantedAt;
+                    const growTime = plot.watered ? crop.growSec * 0.7 : crop.growSec; // 30% boost if watered
+                    const progress = Math.min(100, Math.floor((elapsed / growTime) * 100));
+                    const isReady = progress >= 100;
 
-                    const progressPercent = Math.min(100, Math.floor(((effectiveGrowTime - remainingSec) / effectiveGrowTime) * 100));
+                    div.className = `farm-soil soil-texture ${isWatered ? 'watered' : ''} ${isReady ? 'shimmer-ready' : ''} rounded-2xl h-44 flex flex-col items-center justify-between p-3 text-center relative overflow-hidden transition`;
 
-                    card.innerHTML = `
-                        <div class="w-full flex justify-between items-center text-[10px] font-bold text-slate-400">
-                            <span>区画 #${index + 1}</span>
-                            ${isWatered ? '<span class="text-sky-500 font-bold"><i class="fa-solid fa-droplet"></i> 水やり済</span>' : ''}
+                    let stageGraphic = '';
+                    if (progress < 35) {
+                        stageGraphic = `<div class="text-2xl animate-bounce">🌱</div>`;
+                    } else if (progress < 100) {
+                        stageGraphic = `<div class="text-3xl">🌿</div>`;
+                    } else {
+                        stageGraphic = `<img src="${crop.img}" class="w-14 h-14 object-cover rounded-full border-2 border-amber-300 shadow-md crop-pop-anim">`;
+                    }
+
+                    statusContent = `
+                        <div class="text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                            <span>${crop.name}</span>
                         </div>
 
-                        <div class="my-auto text-center crop-pop-anim">
-                            <div class="text-4xl mb-1 ${isReady ? 'animate-bounce' : ''}">${isReady ? crop.icon : '🌱'}</div>
-                            <div class="font-extrabold text-xs text-slate-800">${crop.name}</div>
+                        <div class="my-auto flex flex-col items-center justify-center">
+                            ${stageGraphic}
                         </div>
 
-                        <div class="w-full space-y-1">
+                        <div class="w-full">
                             ${isReady ? `
-                                <button onclick="harvestPlot(${index})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded-xl text-xs shadow flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-hand-holding-harvest"></i> 収穫する！
+                                <button onclick="harvestPlot(${index})" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold text-xs py-1.5 rounded-xl shadow transition animate-pulse">
+                                    <i class="fa-solid fa-basket-shopping"></i> 収穫する！
                                 </button>
                             ` : `
-                                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border">
-                                    <div class="bg-emerald-500 h-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                                <div class="w-full bg-slate-900/60 rounded-full h-2 overflow-hidden mb-1 border border-white/20">
+                                    <div class="bg-emerald-400 h-full transition-all duration-500" style="width: ${progress}%"></div>
                                 </div>
-                                <div class="flex justify-between items-center text-[10px] font-semibold text-slate-500">
-                                    <span>あと ${remainingSec}秒</span>
-                                    <div class="flex gap-1">
-                                        ${!isWatered ? `<button onclick="waterPlot(${index})" class="text-sky-600 hover:underline"><i class="fa-solid fa-droplet"></i></button>` : ''}
-                                        <button onclick="useFertilizerOnPlot(${index})" class="text-amber-600 hover:underline"><i class="fa-solid fa-bolt"></i></button>
-                                    </div>
+                                <div class="flex justify-between items-center text-[10px] text-amber-200">
+                                    <span>${Math.ceil(growTime - elapsed)}秒</span>
+                                    ${!plot.watered ? `<button onclick="waterPlot(${index})" class="text-sky-300 hover:underline"><i class="fa-solid fa-droplet"></i> 水やり</button>` : '<span class="text-sky-300">水やり済</span>'}
                                 </div>
                             `}
                         </div>
                     `;
                 }
 
-                grid.appendChild(card);
+                div.innerHTML = statusContent;
+                grid.appendChild(div);
             });
         }
 
-        // Render Quick Inventory Section
-        function renderQuickInventory() {
-            const container = document.getElementById('inventoryQuickList');
-            container.innerHTML = '';
-
-            let hasItems = false;
-            Object.entries(gameState.seeds).forEach(([key, count]) => {
-                if (count > 0) {
-                    hasItems = true;
-                    const crop = CROPS[key];
-                    container.innerHTML += `
-                        <div class="bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-900 flex items-center space-x-2">
-                            <span>${crop.icon} ${crop.name}の種</span>
-                            <span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded-full text-[10px]">${count}個</span>
-                        </div>
-                    `;
-                }
-            });
-
-            Object.entries(gameState.fertilizers).forEach(([key, count]) => {
-                if (count > 0) {
-                    hasItems = true;
-                    const fert = FERTILIZERS[key];
-                    container.innerHTML += `
-                        <div class="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-900 flex items-center space-x-2">
-                            <span>${fert.icon} ${fert.name}</span>
-                            <span class="bg-amber-600 text-white px-1.5 py-0.5 rounded-full text-[10px]">${count}個</span>
-                        </div>
-                    `;
-                }
-            });
-
-            if (!hasItems) {
-                container.innerHTML = `<span class="text-xs text-slate-400 italic">種や肥料を持っていません。ショップで購入しましょう！</span>`;
-            }
-        }
-
-        // Render Shop Inventory Catalog
-        function renderShop() {
-            const seedGrid = document.getElementById('seedShopGrid');
-            seedGrid.innerHTML = '';
-
-            Object.entries(CROPS).forEach(([key, crop]) => {
-                const isLocked = gameState.level < crop.unlockLevel;
-                const canAfford = gameState.gold >= crop.cost;
-
-                seedGrid.innerHTML += `
-                    <div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between ${isLocked ? 'opacity-60 bg-slate-50' : ''}">
-                        <div class="flex items-center space-x-3 mb-2">
-                            <span class="text-3xl">${crop.icon}</span>
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-800">${crop.name}の種</h4>
-                                <p class="text-[10px] text-slate-500">育成時間: ${crop.growTime}秒</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between border-t pt-2 mt-2">
-                            <span class="font-black text-amber-600 text-sm"><i class="fa-solid fa-coins"></i> ${crop.cost} G</span>
-                            ${isLocked ? `
-                                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-1 rounded-lg font-bold">Lv.${crop.unlockLevel}で解放</span>
-                            ` : `
-                                <button onclick="buySeed('${key}')" ${!canAfford ? 'disabled' : ''} class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow">
-                                    購入
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                `;
-            });
-
-            const fertGrid = document.getElementById('fertilizerShopGrid');
-            fertGrid.innerHTML = '';
-
-            Object.entries(FERTILIZERS).forEach(([key, fert]) => {
-                const canAfford = gameState.gold >= fert.cost;
-                fertGrid.innerHTML += `
-                    <div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                        <div class="flex items-center space-x-3 mb-2">
-                            <span class="text-3xl">${fert.icon}</span>
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-800">${fert.name}</h4>
-                                <p class="text-[10px] text-slate-500">${fert.effect}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between border-t pt-2 mt-2">
-                            <span class="font-black text-amber-600 text-sm"><i class="fa-solid fa-coins"></i> ${fert.cost} G</span>
-                            <button onclick="buyFertilizer('${key}')" ${!canAfford ? 'disabled' : ''} class="bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-xl shadow">
-                                購入
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        // Render Crop Market Sales View
-        function renderMarket() {
-            const list = document.getElementById('marketCropList');
+        // -------------------------------------------------------------
+        // FARM ACTION LOGIC
+        // -------------------------------------------------------------
+        window.openPlantModal = (plotIndex) => {
+            selectedPlotIndex = plotIndex;
+            const list = document.getElementById('plantModalList');
             list.innerHTML = '';
 
-            let totalCrops = 0;
-            Object.entries(gameState.harvestedCrops).forEach(([key, count]) => {
+            let hasSeeds = false;
+            Object.keys(CROPS).forEach(cropId => {
+                const crop = CROPS[cropId];
+                const count = gameState.seeds[cropId] || 0;
                 if (count > 0) {
-                    totalCrops += count;
-                    const crop = CROPS[key];
-                    const totalVal = count * crop.price;
-
-                    list.innerHTML += `
-                        <div class="bg-white border rounded-2xl p-4 shadow-sm flex justify-between items-center">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-3xl">${crop.icon}</span>
-                                <div>
-                                    <h4 class="font-bold text-sm text-slate-800">${crop.name}</h4>
-                                    <p class="text-xs text-slate-500">所持数: <span class="font-bold text-slate-800">${count}</span> 個</p>
-                                    <p class="text-[10px] text-emerald-600 font-semibold">単価: ${crop.price} G</p>
-                                </div>
+                    hasSeeds = true;
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-slate-50 border rounded-xl hover:bg-emerald-50 transition cursor-pointer';
+                    item.onclick = () => plantCrop(cropId);
+                    item.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <img src="${crop.img}" class="w-10 h-10 rounded-lg object-cover">
+                            <div>
+                                <p class="font-bold text-sm text-slate-800">${crop.name}</p>
+                                <p class="text-[10px] text-slate-500">成長時間: ${crop.growSec}秒 | 売却目安: ${crop.basePrice}G</p>
                             </div>
-                            <button onclick="sellCrop('${key}')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs px-3 py-2 rounded-xl shadow">
-                                ${totalVal} G で売却
-                            </button>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg">所持: ${count}個</span>
                         </div>
                     `;
+                    list.appendChild(item);
                 }
             });
 
-            if (totalCrops === 0) {
-                list.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 italic">収穫済みの野菜がありません。畑で野菜を収穫しましょう！</div>`;
-            }
-        }
-
-        // Seed Purchasing
-        window.buySeed = function(cropKey) {
-            const crop = CROPS[cropKey];
-            if (gameState.gold >= crop.cost) {
-                gameState.gold -= crop.cost;
-                gameState.seeds[cropKey] = (gameState.seeds[cropKey] || 0) + 1;
-                saveUserData();
-                renderAllViews();
-                showToast(`${crop.name}の種を購入しました！`);
-            }
-        };
-
-        // Fertilizer Purchasing
-        window.buyFertilizer = function(fertKey) {
-            const fert = FERTILIZERS[fertKey];
-            if (gameState.gold >= fert.cost) {
-                gameState.gold -= fert.cost;
-                gameState.fertilizers[fertKey] = (gameState.fertilizers[fertKey] || 0) + 1;
-                saveUserData();
-                renderAllViews();
-                showToast(`${fert.name}を購入しました！`);
-            }
-        };
-
-        // Open Planting Modal
-        window.openPlantModal = function(plotIndex) {
-            activeSelectedPlotIndex = plotIndex;
-            const modalList = document.getElementById('modalSeedSelectionList');
-            modalList.innerHTML = '';
-
-            let availableSeedCount = 0;
-            Object.entries(gameState.seeds).forEach(([key, count]) => {
-                if (count > 0) {
-                    availableSeedCount += count;
-                    const crop = CROPS[key];
-                    modalList.innerHTML += `
-                        <button onclick="plantSeed('${key}')" class="w-full bg-slate-50 hover:bg-emerald-50 border p-3 rounded-2xl flex justify-between items-center transition">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-2xl">${crop.icon}</span>
-                                <div class="text-left">
-                                    <div class="font-bold text-xs text-slate-800">${crop.name}の種</div>
-                                    <div class="text-[10px] text-slate-500">成長: ${crop.growTime}秒</div>
-                                </div>
-                            </div>
-                            <span class="bg-emerald-600 text-white font-bold text-xs px-2.5 py-1 rounded-full">残り ${count}個</span>
-                        </button>
-                    `;
-                }
-            });
-
-            if (availableSeedCount === 0) {
-                modalList.innerHTML = `
-                    <div class="text-center py-6">
-                        <p class="text-xs text-slate-500 mb-3">植えられる種を所有していません。</p>
-                        <button onclick="closePlantModal(); switchTab('shop');" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-xl">
-                            ショップへ種を買いに行く
-                        </button>
+            if (!hasSeeds) {
+                list.innerHTML = `
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        <i class="fa-solid fa-store text-2xl mb-2 text-slate-300"></i>
+                        <p>植えられる種がありません。</p>
+                        <p class="text-[10px] text-emerald-600 font-bold mt-1">「ショップ」から種を購入してください！</p>
                     </div>
                 `;
             }
 
-            document.getElementById('plantSeedModal').classList.remove('hidden');
+            document.getElementById('plantModal').classList.remove('hidden');
         };
 
-        window.closePlantModal = function() {
-            document.getElementById('plantSeedModal').classList.add('hidden');
-            activeSelectedPlotIndex = null;
+        window.plantCrop = (cropId) => {
+            if (selectedPlotIndex === null) return;
+            if ((gameState.seeds[cropId] || 0) <= 0) return;
+
+            gameState.seeds[cropId]--;
+            gameState.plots[selectedPlotIndex] = {
+                cropId: cropId,
+                plantedAt: Math.floor(Date.now() / 1000),
+                watered: false
+            };
+
+            closeModal('plantModal');
+            saveUserData();
+            renderAll();
+            showToast(`${CROPS[cropId].name}の種を植えました！`);
         };
 
-        // Plant Seed in Plot
-        window.plantSeed = function(cropKey) {
-            if (activeSelectedPlotIndex === null) return;
-            if (gameState.seeds[cropKey] > 0) {
-                gameState.seeds[cropKey]--;
-                gameState.plots[activeSelectedPlotIndex] = {
-                    id: activeSelectedPlotIndex,
-                    cropKey: cropKey,
-                    plantedAt: Date.now(),
-                    watered: false
-                };
-                saveUserData();
-                closePlantModal();
-                renderAllViews();
-                showToast(`${CROPS[cropKey].name}の種を植えました！`);
-            }
-        };
-
-        // Water Plot
-        window.waterPlot = function(index) {
-            if (gameState.plots[index] && gameState.plots[index].cropKey) {
+        window.waterPlot = (index) => {
+            if (gameState.plots[index]) {
                 gameState.plots[index].watered = true;
                 saveUserData();
-                renderPlots();
-                showToast("水やりをしました！成長速度UP");
+                renderAll();
+                showToast("水やりをしました！（成長スピードアップ）");
             }
         };
 
-        window.waterAllPlots = function() {
-            let wateredCount = 0;
-            gameState.plots.forEach(p => {
-                if (p.cropKey && !p.watered) {
-                    p.watered = true;
-                    wateredCount++;
+        window.waterAllPlots = () => {
+            let count = 0;
+            gameState.plots.forEach(plot => {
+                if (plot.cropId && !plot.watered) {
+                    plot.watered = true;
+                    count++;
                 }
             });
-            if (wateredCount > 0) {
+            if (count > 0) {
                 saveUserData();
-                renderPlots();
-                showToast(`すべての畑に水やりを行いました！`);
-            }
-        };
-
-        // Apply Fertilizer on Plot
-        window.useFertilizerOnPlot = function(index) {
-            if (gameState.fertilizers.speed > 0) {
-                gameState.fertilizers.speed--;
-                gameState.plots[index].plantedAt -= 15000; // Speed up by 15 sec
-                saveUserData();
-                renderAllViews();
-                showToast("急速肥料を使用しました！(-15秒)");
-            } else if (gameState.fertilizers.super > 0) {
-                gameState.fertilizers.super--;
-                gameState.plots[index].plantedAt -= 50000; // Speed up by 50 sec
-                saveUserData();
-                renderAllViews();
-                showToast("スーパー成長剤を使用しました！(-50秒)");
+                renderAll();
+                showToast(`${count}つの畑に一括で水やりをしました！`);
             } else {
-                showToast("肥料を持っていません。ショップで購入してください。", true);
+                showToast("水やりが必要な畑はありません");
             }
         };
 
-        // Harvest Single Plot
-        window.harvestPlot = function(index) {
+        window.harvestPlot = (index) => {
             const plot = gameState.plots[index];
-            if (!plot || !plot.cropKey) return;
+            if (!plot || !plot.cropId) return;
 
-            const cropKey = plot.cropKey;
-            gameState.harvestedCrops[cropKey] = (gameState.harvestedCrops[cropKey] || 0) + 1;
-            gameState.plots[index] = { id: index, cropKey: null, plantedAt: null, watered: false };
+            const cropId = plot.cropId;
+            const crop = CROPS[cropId];
 
-            // Level Up Check
-            gameState.totalSales += 10;
-            const newLevel = Math.floor(gameState.totalSales / 500) + 1;
-            if (newLevel > gameState.level) {
-                gameState.level = newLevel;
-                showToast(`🎉 農場レベルが Lv.${newLevel} に上がりました！`);
-            }
+            gameState.inventory[cropId] = (gameState.inventory[cropId] || 0) + 1;
+            gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false };
+
+            // Level XP Progress
+            checkLevelUp();
 
             saveUserData();
-            renderAllViews();
-            showToast(`${CROPS[cropKey].name}を収穫しました！`);
+            renderAll();
+            showToast(`${crop.name}を収穫しました！市場で売却できます。`);
         };
 
-        window.harvestAllPlots = function() {
-            let count = 0;
-            gameState.plots.forEach((plot, idx) => {
-                if (plot.cropKey) {
-                    const crop = CROPS[plot.cropKey];
-                    const elapsedSec = Math.floor((Date.now() - plot.plantedAt) / 1000);
-                    const effectiveGrowTime = plot.watered ? Math.floor(crop.growTime * 0.7) : crop.growTime;
-                    if (elapsedSec >= effectiveGrowTime) {
-                        harvestPlot(idx);
-                        count++;
+        window.harvestAllPlots = () => {
+            const now = Math.floor(Date.now() / 1000);
+            let harvestedCount = 0;
+
+            gameState.plots.forEach((plot, index) => {
+                if (plot.cropId) {
+                    const crop = CROPS[plot.cropId];
+                    const growTime = plot.watered ? crop.growSec * 0.7 : crop.growSec;
+                    if ((now - plot.plantedAt) >= growTime) {
+                        gameState.inventory[plot.cropId] = (gameState.inventory[plot.cropId] || 0) + 1;
+                        gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false };
+                        harvestedCount++;
                     }
                 }
             });
-            if (count === 0) showToast("収穫できる野菜がありません", true);
-        };
 
-        // Market Sales Processing
-        window.sellCrop = function(cropKey) {
-            const count = gameState.harvestedCrops[cropKey] || 0;
-            if (count > 0) {
-                const totalGold = count * CROPS[cropKey].price;
-                gameState.gold += totalGold;
-                gameState.totalSales += totalGold;
-                gameState.harvestedCrops[cropKey] = 0;
-
+            if (harvestedCount > 0) {
+                checkLevelUp();
                 saveUserData();
-                renderAllViews();
-                showToast(`${CROPS[cropKey].name}をすべて出荷し、${totalGold} Gを獲得しました！`);
+                renderAll();
+                showToast(`${harvestedCount}個の作物を一括収穫しました！`);
+            } else {
+                showToast("収穫可能な作物がありません");
             }
         };
 
-        window.sellAllHarvested = function() {
-            let grandTotal = 0;
-            Object.entries(gameState.harvestedCrops).forEach(([key, count]) => {
+        function checkLevelUp() {
+            const totalCrops = Object.values(gameState.inventory).reduce((a, b) => a + b, 0);
+            const newLevel = Math.floor(totalCrops / 10) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                showToast(`🎉 農場レベルが Lv.${newLevel} にアップしました！新しい種が解禁！`);
+            }
+        }
+
+        // Timer Loop for growth updates
+        setInterval(() => {
+            renderFarmGrid();
+        }, 1000);
+
+        // -------------------------------------------------------------
+        // SHOP & MARKET SYSTEM
+        // -------------------------------------------------------------
+        function renderShop() {
+            const seedList = document.getElementById('seedShopList');
+            seedList.innerHTML = '';
+
+            Object.keys(CROPS).forEach(cropId => {
+                const crop = CROPS[cropId];
+                const isLocked = gameState.level < crop.reqLevel;
+                const owned = gameState.seeds[cropId] || 0;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-3 rounded-xl border ${isLocked ? 'bg-slate-100 opacity-60' : 'bg-slate-50 hover:bg-emerald-50/50'} transition`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${crop.img}" class="w-12 h-12 rounded-xl object-cover border">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-sm text-slate-800">${crop.name}の種</span>
+                                ${isLocked ? `<span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">Lv.${crop.reqLevel}必要</span>` : ''}
+                            </div>
+                            <p class="text-[11px] text-slate-500">価格: <span class="font-bold text-amber-600">${crop.buyCost}G</span> | 所持: ${owned}包</p>
+                        </div>
+                    </div>
+                    <button onclick="buySeed('${cropId}')" ${isLocked ? 'disabled' : ''} class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow transition">
+                        購入する
+                    </button>
+                `;
+                seedList.appendChild(div);
+            });
+
+            const itemShopList = document.getElementById('itemShopList');
+            itemShopList.innerHTML = '';
+
+            Object.keys(ITEMS).forEach(itemId => {
+                const item = ITEMS[itemId];
+                const owned = gameState.items[itemId] || 0;
+
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 rounded-xl border bg-slate-50 hover:bg-amber-50/50 transition';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl">${item.icon}</div>
+                        <div>
+                            <span class="font-bold text-sm text-slate-800">${item.name}</span>
+                            <p class="text-[10px] text-slate-500">${item.desc}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">価格: <span class="font-bold text-amber-600">${item.price}G</span> | 所持: ${owned}個</p>
+                        </div>
+                    </div>
+                    <button onclick="buyItem('${itemId}')" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow transition">
+                        購入する
+                    </button>
+                `;
+                itemShopList.appendChild(div);
+            });
+        }
+
+        window.buySeed = (cropId) => {
+            const crop = CROPS[cropId];
+            if (gameState.gold < crop.buyCost) {
+                showToast("ゴールド（G）が足りません！");
+                return;
+            }
+            gameState.gold -= crop.buyCost;
+            gameState.seeds[cropId] = (gameState.seeds[cropId] || 0) + 1;
+            saveUserData();
+            renderAll();
+            showToast(`${crop.name}の種を購入しました！`);
+        };
+
+        window.buyItem = (itemId) => {
+            const item = ITEMS[itemId];
+            if (gameState.gold < item.price) {
+                showToast("ゴールド（G）が足りません！");
+                return;
+            }
+            gameState.gold -= item.price;
+            gameState.items[itemId] = (gameState.items[itemId] || 0) + 1;
+            saveUserData();
+            renderAll();
+            showToast(`${item.name}を購入しました！`);
+        };
+
+        function renderMarket() {
+            const list = document.getElementById('inventoryList');
+            list.innerHTML = '';
+
+            let totalItems = 0;
+
+            Object.keys(gameState.inventory).forEach(cropId => {
+                const count = gameState.inventory[cropId] || 0;
                 if (count > 0) {
-                    grandTotal += count * CROPS[key].price;
-                    gameState.harvestedCrops[key] = 0;
+                    totalItems += count;
+                    const crop = CROPS[cropId];
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-50 border rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition';
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <img src="${crop.img}" class="w-12 h-12 rounded-xl object-cover border">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${crop.name}</h4>
+                                <p class="text-xs text-slate-500">単価: <span class="font-bold text-amber-600">${crop.basePrice}G</span></p>
+                                <p class="text-[11px] text-emerald-700 font-bold">在庫: ${count}個</p>
+                            </div>
+                        </div>
+                        <button onclick="sellCrop('${cropId}')" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow">
+                            売却
+                        </button>
+                    `;
+                    list.appendChild(div);
                 }
             });
 
-            if (grandTotal > 0) {
-                gameState.gold += grandTotal;
-                gameState.totalSales += grandTotal;
-                saveUserData();
-                renderAllViews();
-                showToast(`全収穫物を一括売却し、${grandTotal} Gを獲得しました！`);
-            } else {
-                showToast("売却できる収穫物がありません", true);
+            if (totalItems === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-400 text-xs">
+                        <i class="fa-solid fa-basket-shopping text-3xl mb-2 text-slate-300"></i>
+                        <p>収穫した野菜はありません。</p>
+                        <p class="text-[10px]">畑で野菜を育てるか、収穫を行ってください。</p>
+                    </div>
+                `;
             }
-        };
-
-        // Friend Request & List Subscription Logic
-        function subscribeToFriendsAndRequests() {
-            if (!currentUser) return;
-
-            // 1. Pending Friend Requests Subscription
-            const requestsQuery = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'friendRequests');
-            onSnapshot(requestsQuery, (snapshot) => {
-                const reqList = document.getElementById('pendingRequestsList');
-                reqList.innerHTML = '';
-
-                if (snapshot.empty) {
-                    reqList.innerHTML = `<p class="text-slate-400 italic py-2 text-center">届いている申請はありません</p>`;
-                    return;
-                }
-
-                snapshot.forEach((docSnap) => {
-                    const req = docSnap.data();
-                    reqList.innerHTML += `
-                        <div class="bg-amber-50 border border-amber-200 p-2 rounded-xl flex justify-between items-center">
-                            <span class="font-mono text-[10px] text-amber-900 truncate max-w-[120px]">${req.fromUid}</span>
-                            <div class="flex gap-1">
-                                <button onclick="acceptFriendRequest('${req.fromUid}')" class="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-lg text-[10px]">承認</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }, (err) => console.error("Requests sub error:", err));
-
-            // 2. Friends List Subscription
-            const friendsQuery = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'friends');
-            onSnapshot(friendsQuery, (snapshot) => {
-                const friendsContainer = document.getElementById('friendsList');
-                friendsContainer.innerHTML = '';
-                document.getElementById('friendCountBadge').innerText = `${snapshot.size}人`;
-
-                if (snapshot.empty) {
-                    friendsContainer.innerHTML = `<p class="text-slate-400 italic py-6 text-center text-xs">まだフレンドがいません。<br>IDで友達を検索・申請してみましょう！</p>`;
-                    return;
-                }
-
-                snapshot.forEach((docSnap) => {
-                    const friend = docSnap.data();
-                    const isSelected = activeChatFriendId === friend.friendUid;
-
-                    friendsContainer.innerHTML += `
-                        <div onclick="selectChatFriend('${friend.friendUid}', '${friend.displayName || friend.friendUid.substring(0,6)}')" class="p-3 rounded-xl border ${isSelected ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'} cursor-pointer flex justify-between items-center transition">
-                            <div class="flex items-center space-x-2 truncate">
-                                <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                                <div class="truncate">
-                                    <div class="font-bold text-xs text-slate-800 truncate">${friend.displayName || '農家#' + friend.friendUid.substring(0,5)}</div>
-                                    <div class="text-[10px] text-slate-400 font-mono">${friend.friendUid.substring(0,8)}...</div>
-                                </div>
-                            </div>
-                            <button onclick="event.stopPropagation(); sendGiftToFriend('${friend.friendUid}')" class="text-amber-500 hover:text-amber-600 text-xs font-bold px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg" title="肥料ギフトを贈る">
-                                🎁 ギフト
-                            </button>
-                        </div>
-                    `;
-                });
-            }, (err) => console.error("Friends sub error:", err));
         }
 
-        // Send Friend Request
-        window.sendFriendRequest = async function() {
-            const targetUid = document.getElementById('targetFriendIdInput').value.trim();
-            if (!targetUid) return showToast("ユーザーIDを入力してください", true);
+        window.sellCrop = (cropId) => {
+            const count = gameState.inventory[cropId] || 0;
+            if (count <= 0) return;
+
+            const crop = CROPS[cropId];
+            const earned = crop.basePrice;
+
+            gameState.inventory[cropId]--;
+            gameState.gold += earned;
+            gameState.totalSales += earned;
+
+            saveUserData();
+            renderAll();
+            showToast(`${crop.name}を1個売却し、+${earned}G 獲得！`);
+        };
+
+        window.sellAllCrops = () => {
+            let earnedTotal = 0;
+            Object.keys(gameState.inventory).forEach(cropId => {
+                const count = gameState.inventory[cropId] || 0;
+                if (count > 0) {
+                    const crop = CROPS[cropId];
+                    earnedTotal += crop.basePrice * count;
+                    gameState.inventory[cropId] = 0;
+                }
+            });
+
+            if (earnedTotal > 0) {
+                gameState.gold += earnedTotal;
+                gameState.totalSales += earnedTotal;
+                saveUserData();
+                renderAll();
+                showToast(`すべての収穫物を売却し、+${earnedTotal.toLocaleString()}G 獲得しました！`);
+            } else {
+                showToast("売却できる野菜がありません");
+            }
+        };
+
+        // -------------------------------------------------------------
+        // FRIEND & CHAT LOGIC (RULE 1 & 2 SAFE)
+        // -------------------------------------------------------------
+        window.openAddFriendModal = () => {
+            if (!currentUser || currentUser.isAnonymous) {
+                showToast("フレンド機能を利用するにはGoogleログインが必要です");
+                return;
+            }
+            document.getElementById('friendModal').classList.remove('hidden');
+        };
+
+        window.copyMyUid = () => {
             if (!currentUser) return;
-            if (targetUid === currentUser.uid) return showToast("自分自身には申請できません", true);
+            const temp = document.createElement('textarea');
+            temp.value = currentUser.uid;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("自分のユーザーIDをコピーしました！");
+        };
+
+        window.sendFriendRequest = async () => {
+            const targetUid = document.getElementById('targetUidInput').value.trim();
+            if (!targetUid) return;
+            if (targetUid === currentUser.uid) {
+                showToast("自分自身には申請できません");
+                return;
+            }
 
             try {
-                const reqRef = doc(db, 'artifacts', appId, 'users', targetUid, 'friendRequests', currentUser.uid);
-                await setDoc(reqRef, {
+                // RULE 1: Public request path
+                const requestRef = doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', `${targetUid}_${currentUser.uid}`);
+                await setDoc(requestRef, {
+                    toUid: targetUid,
                     fromUid: currentUser.uid,
+                    fromName: currentUser.displayName || '匿名農家',
+                    status: 'pending',
                     createdAt: serverTimestamp()
                 });
-                document.getElementById('targetFriendIdInput').value = '';
+                closeModal('friendModal');
+                document.getElementById('targetUidInput').value = '';
                 showToast("フレンド申請を送信しました！");
-            } catch (err) {
-                console.error("Friend request failed:", err);
-                showToast("申請の送信に失敗しました", true);
+            } catch (e) {
+                console.error("Friend request error:", e);
+                showToast("申請失敗: " + e.message);
             }
         };
 
-        // Accept Friend Request
-        window.acceptFriendRequest = async function(fromUid) {
+        function listenToFriendRequests() {
             if (!currentUser) return;
-            try {
-                // Add to my friends
-                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'friends', fromUid), {
-                    friendUid: fromUid,
-                    createdAt: serverTimestamp()
-                });
-                // Add to opponent's friends
-                await setDoc(doc(db, 'artifacts', appId, 'users', fromUid, 'friends', currentUser.uid), {
-                    friendUid: currentUser.uid,
-                    createdAt: serverTimestamp()
-                });
-                // Delete request
-                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'friendRequests', fromUid), { accepted: true });
+            // Fetch requests sent to current user
+            const reqQuery = collection(db, 'artifacts', appId, 'public', 'data', 'friendRequests');
+            onSnapshot(reqQuery, (snapshot) => {
+                const container = document.getElementById('friendRequestsContainer');
+                container.innerHTML = '';
 
-                showToast("フレンド申請を承認しました！");
-            } catch (err) {
-                console.error("Accept friend error:", err);
+                snapshot.docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.toUid === currentUser.uid && data.status === 'pending') {
+                        const div = document.createElement('div');
+                        div.className = 'bg-amber-50 border border-amber-200 p-2 rounded-xl flex items-center justify-between text-xs';
+                        div.innerHTML = `
+                            <span class="font-bold text-amber-900">${data.fromName} からの申請</span>
+                            <div class="flex gap-1">
+                                <button onclick="acceptFriend('${data.fromUid}', '${data.fromName}', '${docSnap.id}')" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded-lg text-[10px]">承認</button>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+            }, err => console.error(err));
+        }
+
+        window.acceptFriend = async (fromUid, fromName, reqDocId) => {
+            try {
+                // Add to my friend collection (RULE 1 safe path)
+                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'friends', fromUid), {
+                    uid: fromUid,
+                    name: fromName,
+                    addedAt: serverTimestamp()
+                });
+                // Add reciprocal friend for opponent
+                await setDoc(doc(db, 'artifacts', appId, 'users', fromUid, 'friends', currentUser.uid), {
+                    uid: currentUser.uid,
+                    name: currentUser.displayName || '匿名農家',
+                    addedAt: serverTimestamp()
+                });
+
+                // Update request
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', reqDocId), {
+                    status: 'accepted'
+                });
+
+                showToast(`${fromName} さんとフレンドになりました！`);
+            } catch (e) {
+                console.error("Accept friend error:", e);
             }
         };
 
-        // Send Gift Item to Friend
-        window.sendGiftToFriend = function(friendUid) {
-            showToast("フレンドに🎁急速肥料ギフトをプレゼントしました！");
-        };
+        function listenToFriends() {
+            if (!currentUser) return;
+            const friendsCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'friends');
+            onSnapshot(friendsCol, (snapshot) => {
+                const list = document.getElementById('friendList');
+                list.innerHTML = '';
 
-        // Select Chat Friend & Subscribe to Realtime Messages
-        window.selectChatFriend = function(friendUid, displayName) {
-            activeChatFriendId = friendUid;
-            document.getElementById('activeChatFriendName').innerText = displayName;
-            document.getElementById('activeChatFriendStatus').innerText = `ID: ${friendUid.substring(0,10)}...`;
-
-            document.getElementById('chatInput').disabled = false;
-            document.getElementById('sendChatBtn').disabled = false;
-
-            if (chatUnsubscribe) chatUnsubscribe();
-
-            // Unique Room ID between two UIDs
-            const roomId = [currentUser.uid, friendUid].sort().join('_');
-            const messagesQuery = collection(db, 'artifacts', appId, 'public', 'data', 'chatRooms', roomId, 'messages');
-
-            chatUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-                const msgStream = document.getElementById('chatMessageStream');
-                msgStream.innerHTML = '';
-
-                let messages = [];
-                snapshot.forEach(docSnap => messages.push(docSnap.data()));
-                // Memory sort by timestamp
-                messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-
-                if (messages.length === 0) {
-                    msgStream.innerHTML = `<p class="text-center text-slate-400 italic my-auto py-10">最初のメッセージを送信しましょう！</p>`;
+                if (snapshot.empty) {
+                    list.innerHTML = `<div class="text-center text-slate-400 text-xs py-8">フレンドがいません。<br>IDを共有して追加しましょう！</div>`;
                     return;
                 }
 
-                messages.forEach(msg => {
-                    const isMe = msg.senderUid === currentUser.uid;
-                    msgStream.innerHTML += `
-                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                            <div class="max-w-[75%] px-3 py-2 rounded-2xl ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white text-slate-800 border rounded-bl-none'} shadow-sm">
-                                <p class="text-xs break-words">${escapeHtml(msg.text)}</p>
+                snapshot.docs.forEach(docSnap => {
+                    const f = docSnap.data();
+                    const div = document.createElement('div');
+                    const isActive = activeChatFriendUid === f.uid;
+                    div.className = `p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${isActive ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50 hover:bg-slate-100'}`;
+                    div.onclick = () => selectChatFriend(f.uid, f.name);
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                                ${f.name.charAt(0)}
                             </div>
+                            <span class="font-bold text-xs text-slate-800">${f.name}</span>
                         </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
                     `;
+                    list.appendChild(div);
+                });
+            }, err => console.error(err));
+        }
+
+        function selectChatFriend(friendUid, friendName) {
+            activeChatFriendUid = friendUid;
+            document.getElementById('chatTargetName').innerText = friendName;
+            document.getElementById('chatTargetStatus').innerText = 'オンライン';
+            document.getElementById('chatInput').disabled = false;
+            document.getElementById('chatSendBtn').disabled = false;
+
+            listenToChatMessages();
+            renderAll();
+        }
+
+        function listenToChatMessages() {
+            if (!currentUser || !activeChatFriendUid) return;
+            if (chatUnsubscribe) chatUnsubscribe();
+
+            const chatRoomId = [currentUser.uid, activeChatFriendUid].sort().join('_');
+            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', chatRoomId, 'messages');
+
+            chatUnsubscribe = onSnapshot(messagesCol, (snapshot) => {
+                const msgList = document.getElementById('chatMessageList');
+                msgList.innerHTML = '';
+
+                // Client-side sort by timestamp to avoid composite index requirements
+                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                docs.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+
+                if (docs.length === 0) {
+                    msgList.innerHTML = `<div class="text-center text-slate-400 text-xs py-8">メッセージ履歴はありません。挨拶を送ってみましょう！</div>`;
+                    return;
+                }
+
+                docs.forEach(m => {
+                    const isMe = m.senderUid === currentUser.uid;
+                    const div = document.createElement('div');
+                    div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                    div.innerHTML = `
+                        <div class="max-w-[75%] px-3.5 py-2 rounded-2xl text-xs ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white border text-slate-800 rounded-bl-none shadow-sm'}">
+                            ${m.text}
+                        </div>
+                        <span class="text-[9px] text-slate-400 mt-1 px-1">${m.senderName || ''}</span>
+                    `;
+                    msgList.appendChild(div);
                 });
 
-                msgStream.scrollTop = msgStream.scrollHeight;
-            }, (err) => console.error("Chat sub error:", err));
+                msgList.scrollTop = msgList.scrollHeight;
+            }, err => console.error(err));
+        }
 
-            renderAllViews();
-        };
-
-        // Send Message in Active Chat
-        window.sendChatMessage = async function() {
+        window.sendChatMessage = async (e) => {
+            e.preventDefault();
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
-            if (!text || !activeChatFriendId || !currentUser) return;
+            if (!text || !currentUser || !activeChatFriendUid) return;
 
-            const roomId = [currentUser.uid, activeChatFriendId].sort().join('_');
-            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'chatRooms', roomId, 'messages');
+            input.value = '';
+            const chatRoomId = [currentUser.uid, activeChatFriendUid].sort().join('_');
+            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats', chatRoomId, 'messages');
 
             try {
-                input.value = '';
-                await addDoc(messagesRef, {
+                await addDoc(messagesCol, {
                     senderUid: currentUser.uid,
+                    senderName: currentUser.displayName || '農家',
                     text: text,
                     createdAt: serverTimestamp()
                 });
             } catch (err) {
-                console.error("Send message error:", err);
-                showToast("メッセージ送信エラー", true);
+                console.error("Chat send error:", err);
+                showToast("送信エラー: " + err.message);
             }
         };
 
-        function subscribeToGlobalRanking() {
+        // -------------------------------------------------------------
+        // RANKING LEADERBOARD LOGIC
+        // -------------------------------------------------------------
+        async function updateLeaderboard() {
             const rankRef = collection(db, 'artifacts', appId, 'public', 'data', 'rankings');
             onSnapshot(rankRef, (snapshot) => {
                 const tbody = document.getElementById('rankingTableBody');
                 tbody.innerHTML = '';
 
-                let list = [];
-                snapshot.forEach(d => list.push(d.data()));
-                // Sort by total sales in memory
+                let list = snapshot.docs.map(d => d.data());
+                // Sort in JS memory to satisfy Rule 2
                 list.sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0));
 
                 if (list.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400 italic">ランキングデータがまだありません</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-xs text-slate-400">ランキングデータがありません</td></tr>`;
                     return;
                 }
 
-                list.forEach((rank, idx) => {
-                    const isMe = currentUser && rank.uid === currentUser.uid;
-                    let rankBadge = `${idx + 1}`;
-                    if (idx === 0) rankBadge = '🥇';
-                    if (idx === 1) rankBadge = '🥈';
-                    if (idx === 2) rankBadge = '🥉';
+                list.slice(0, 10).forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
 
-                    tbody.innerHTML += `
-                        <tr class="${isMe ? 'bg-amber-50 font-bold' : ''} hover:bg-slate-50">
-                            <td class="p-3 text-center text-sm font-extrabold">${rankBadge}</td>
-                            <td class="p-3">
-                                <div class="font-bold text-slate-800 text-xs">${escapeHtml(rank.displayName || '農家#' + rank.uid.substring(0,4))} ${isMe ? '<span class="text-emerald-600 font-normal">(あなた)</span>' : ''}</div>
-                                <div class="text-[10px] text-slate-400">農場 Lv.${rank.level || 1}</div>
-                            </td>
-                            <td class="p-3 text-right font-mono font-bold text-emerald-700 text-xs">
-                                ${(rank.totalSales || 0).toLocaleString()} G
-                            </td>
-                        </tr>
+                    let rankBadge = `<span class="font-bold text-slate-500">${index + 1}</span>`;
+                    if (index === 0) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-400 text-white font-bold inline-flex items-center justify-center text-xs">1</span>`;
+                    if (index === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 font-bold inline-flex items-center justify-center text-xs">2</span>`;
+                    if (index === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-600 text-white font-bold inline-flex items-center justify-center text-xs">3</span>`;
+
+                    tr.innerHTML = `
+                        <td class="p-3 text-center">${rankBadge}</td>
+                        <td class="p-3 font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-user-gear text-slate-400"></i> ${item.displayName || '匿名農家'}
+                        </td>
+                        <td class="p-3 text-right font-extrabold text-amber-600">${(item.totalSales || 0).toLocaleString()} G</td>
                     `;
+                    tbody.appendChild(tr);
                 });
-            }, (err) => console.error("Ranking sub error:", err));
+            }, err => console.error(err));
         }
 
-        // Class Report Template Generation
-        function updateReportText() {
-            const reportBox = document.getElementById('reportTextContent');
-            const uidStr = currentUser ? currentUser.uid : '未ログイン';
-
-            const content = `【ソフトウェア開発 修了課題 提出データ】
-
-1. GitHubリポジトリのURL:
-   https://github.com/[YOUR_GITHUB_USERNAME]/agri-farm-app
-
-2. アプリの公開URL（GitHub Pages）:
-   https://[YOUR_GITHUB_USERNAME].github.io/agri-farm-app/
-
-3. アプリ名と概要:
-   アプリ名：本格！アグリファーム＆フレンドチャット
-   概要：野菜の育成・水やり・肥料やりから収穫、市場での売却による資金調達循環を体験でき、フレンドとのリアルタイムチャットや全国出荷ランキングで交流できる農業経営シミュレーションアプリ。
-
-4. 保存しているデータ（Firestore）:
-   - ユーザーの所持金（G）、農場レベル、累計出荷額
-   - 畑の区画状態（作物の種類、植えた時間、水やりフラグ）
-   - 所持している種・肥料・収穫物インベントリ
-   - フレンドリスト、フレンド申請データ、1対1チャットメッセージ
-
-5. 工夫した点:
-   - 販売して得たお金（G）で「ショップ」から種や肥料を購入し、畑で育成してさらに売却するという完全な循環型エコノミー設計。
-   - 毎日1回のログインボーナス機能。
-   - FirestoreのonSnapshotを活用したリアルタイム・フレンドチャットおよび全国出荷額ランキング機能。
-
-6. 苦労した点と解決方法:
-   - Firestoreのクエリ制約（複合インデックスエラー）を回避するため、onSnapshotで全件受信後にJavaScriptメモリ上でソート処理を行う構成にしてエラーを解消した。
-
-7. 未完成の部分、今後追加したい機能:
-   - 季節イベント（夏野菜フェアなど）や、天候変化（雨が降ると水やり自動完了）などの気象システム。
-
-8. 生成AIの利用について:
-   - UIレイアウトのレスポンシブデザイン（Tailwind CSS）調整や、Firestoreのリアルタイムチャット同期の構成作成にGeminiを利用。
-
-9. ソフトウェア開発を学んだ感想:
-   - 画面の見た目だけでなく、認証やクラウドデータベースとの連携まで一貫してWebアプリを構築する楽しさと難しさを体験できました。`;
-
-            reportBox.innerText = content;
-        }
-
-        window.copyReportText = function() {
-            const text = document.getElementById('reportTextContent').innerText;
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast("課題提出メモをクリップボードにコピーしました！");
-        };
-
-        window.copyMyUserId = function() {
-            if (!currentUser) return showToast("ログインしてください", true);
-            const textarea = document.createElement('textarea');
-            textarea.value = currentUser.uid;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast("ユーザーIDをコピーしました！");
-        };
-
-        // Modal Controls
-        document.getElementById('reportModalBtn').addEventListener('click', () => {
-            updateReportText();
-            document.getElementById('reportModal').classList.remove('hidden');
-        });
-
-        window.closeReportModal = function() {
-            document.getElementById('reportModal').classList.add('hidden');
-        };
-
-        // Navigation Tabs Switching
-        window.switchTab = function(tabName) {
-            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+        // -------------------------------------------------------------
+        // HELPERS & UI CONTROLS
+        // -------------------------------------------------------------
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('border-emerald-600', 'text-emerald-700');
                 el.classList.add('border-transparent', 'text-slate-500');
             });
 
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeTabBtn = document.getElementById(`tab-${tabName}`);
-            activeTabBtn.classList.remove('border-transparent', 'text-slate-500');
-            activeTabBtn.classList.add('border-emerald-600', 'text-emerald-700');
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            activeBtn.classList.add('border-emerald-600', 'text-emerald-700');
         };
 
-        // Toast Notification System
-        function showToast(msg, isError = false) {
+        window.closeModal = (id) => {
+            document.getElementById(id).classList.add('hidden');
+        };
+
+        function showToast(msg) {
             const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMsg.innerText = msg;
-            toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400";
-
+            document.getElementById('toastMsg').innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
         }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
-        }
+        // -------------------------------------------------------------
+        // ASSIGNMENT MEMO GENERATOR
+        // -------------------------------------------------------------
+        document.getElementById('openSubmitMemoBtn').addEventListener('click', () => {
+            const memoContainer = document.getElementById('submitMemoText');
+            memoContainer.innerHTML = `
+1. GitHubリポジトリのURL: (ご自身のGitHubリポジトリURLを記入)
+2. アプリの公開URL: https://saa24025-hub.github.io/yasaisaibai/
+3. アプリ名: 本格！アグリファーム＆フレンドチャット
+4. 保存データ: 資金(G)、農場レベル、種・肥料の所持数、畑の成長状態、出荷実績、フレンド関係・チャット履歴
+5. 工夫した点: 
+ - リアルな土の畝（うね）デザインと水やり時の湿り気演出
+ - 作物を売った資金で市場から種や肥料を購入する本格経営ループ
+ - Firebaseを使用したリアルタイム1対1フレンドチャットと全国出荷額ランキング機能
+6. 苦労した点と解決方法:
+ - Googleログイン時に auth/unauthorized-domain エラーが発生したため、Firebase Consoleの認証ドメイン設定に "saa24025-hub.github.io" を登録して解決しました。
+7. 未完成の部分・追加したい機能: 季節ごとの天候変化イベントや共同農場の追加
+8. 生成AIの利用: UIデザイン、Firebase同期ロジック、リアルタイムチャット構造のコード実装で利用
+9. 感想: フロントエンド（画面）とバックエンド（Firestore）がリアルタイムに連動するアプリ開発の楽しさを学びました。
+            `;
+            document.getElementById('submitMemoModal').classList.remove('hidden');
+        });
 
-        // Initialize Loop & Startup
-        window.onload = function() {
-            initAuth();
-            setInterval(renderPlots, 1000); // Ticking plot progress
+        window.copySubmitMemo = () => {
+            const text = document.getElementById('submitMemoText').innerText;
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("提出フォーム用のテキストをコピーしました！");
         };
+
+        // Run Initial Auth Setup
+        initAuth();
     </script>
 </body>
 </html>
