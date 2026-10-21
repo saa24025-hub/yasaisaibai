@@ -92,22 +92,29 @@
                 </div>
                 <div>
                     <h1 class="font-extrabold text-xl tracking-wide flex items-center gap-2">
-                        リアルアグリファーム <span class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full text-emerald-100 border border-emerald-400">プロ版</span>
+                        リアルアグリファーム <span class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full text-emerald-100 border border-emerald-400">DX版</span>
                     </h1>
                     <p class="text-[10px] text-emerald-200">自然の恵みを育てるリアル栽培シミュレーション</p>
                 </div>
             </div>
 
-            <!-- Currency & Level Display -->
-            <div class="flex items-center space-x-4 bg-emerald-800/80 px-3 py-1.5 rounded-full text-sm font-semibold border border-emerald-600">
+            <!-- Currency & Level Display with Level XP Bar -->
+            <div class="flex items-center space-x-4 bg-emerald-800/80 px-4 py-1.5 rounded-2xl text-sm font-semibold border border-emerald-600 shadow-inner">
                 <div class="flex items-center space-x-1" title="所有ゴールド">
                     <i class="fa-solid fa-coins text-amber-400"></i>
-                    <span id="goldDisplay" class="text-amber-200">1000</span> G
+                    <span id="goldDisplay" class="text-amber-200 font-extrabold">1000</span> G
                 </div>
-                <div class="w-px h-4 bg-emerald-600"></div>
-                <div class="flex items-center space-x-1" title="農場レベル">
-                    <i class="fa-solid fa-award text-amber-300"></i>
-                    <span>Lv.<span id="levelDisplay">1</span></span>
+                <div class="w-px h-5 bg-emerald-600"></div>
+                <div class="flex flex-col justify-center min-w-[130px]" title="農場レベルと経験値">
+                    <div class="flex justify-between items-center text-xs mb-0.5">
+                        <span class="text-amber-300 font-extrabold flex items-center gap-1">
+                            <i class="fa-solid fa-award"></i> Lv.<span id="levelDisplay">1</span>
+                        </span>
+                        <span class="text-[10px] text-emerald-200"><span id="xpDisplay">0</span>/<span id="nextXpDisplay">100</span> XP</span>
+                    </div>
+                    <div class="w-full bg-emerald-950/80 rounded-full h-2 overflow-hidden border border-emerald-500/30">
+                        <div id="xpProgressBar" class="bg-gradient-to-r from-amber-400 to-yellow-300 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
 
@@ -159,7 +166,7 @@
                     <h2 class="font-extrabold text-lg flex items-center gap-2">
                         <i class="fa-solid fa-seedling"></i> 農場の畑
                     </h2>
-                    <p class="text-xs text-emerald-100">空き地をタップして種をまき、水や肥料をあげて育てましょう！</p>
+                    <p class="text-xs text-emerald-100">空き地をタップして種をまき、水や肥料（🧪🌟✨）をあげて育てましょう！</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="waterAllPlots()" class="bg-sky-500 hover:bg-sky-400 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
@@ -183,7 +190,7 @@
                 <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-store text-emerald-600"></i> アグリショップ
                 </h2>
-                <p class="text-xs text-slate-500">販売して得たゴールド（G）で新しい種や高品質な肥料を購入できます</p>
+                <p class="text-xs text-slate-500">収穫・出荷で得たゴールド（G）で新しい種や様々な高性能肥料を購入できます</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -200,7 +207,7 @@
                 <!-- Fertilizer & Upgrade Shop -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
                     <h3 class="font-bold text-base text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-flask-vial text-amber-500"></i> 肥料・資材の購入
+                        <i class="fa-solid fa-flask-vial text-amber-500"></i> 特製肥料・資材の購入
                     </h3>
                     <div id="itemShopList" class="space-y-3">
                         <!-- Items generated dynamically -->
@@ -216,7 +223,7 @@
                     <h2 class="font-extrabold text-lg flex items-center gap-2">
                         <i class="fa-solid fa-chart-line"></i> 野菜中央市場
                     </h2>
-                    <p class="text-xs text-amber-100">収穫した野菜を売却して資金（G）を獲得します。相場は変動します！</p>
+                    <p class="text-xs text-amber-100">収穫した野菜を売却してゴールド（G）と経験値（XP）を獲得します！</p>
                 </div>
                 <button onclick="sellAllCrops()" class="bg-amber-300 hover:bg-amber-200 text-amber-950 px-4 py-2 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
                     <i class="fa-solid fa-sack-dollar"></i> すべて一括売却
@@ -337,6 +344,19 @@
         </div>
     </div>
 
+    <!-- Modal: Apply Fertilizer Choice -->
+    <div id="fertilizerModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl crop-pop-anim">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-flask-vial text-amber-500"></i> 使用する肥料を選択</h3>
+                <button onclick="closeModal('fertilizerModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="fertilizerModalList" class="space-y-2 max-h-80 overflow-y-auto">
+                <!-- Fertilizer options -->
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Friend Search -->
     <div id="friendModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl crop-pop-anim">
@@ -409,7 +429,7 @@
             getDocs
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 指定された Firebase 設定情報
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA5b5Hj5N8QF_29okQnXDIQFeNksdIqujY",
             authDomain: "apuri-4932c.firebaseapp.com",
@@ -419,7 +439,7 @@
             appId: "1:372405982327:web:d50f68eb10302007e9e272"
         };
 
-        // Firebase初期化
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -431,32 +451,85 @@
         // GAME DEFINITIONS & SEEDS DATA
         // -------------------------------------------------------------
         const CROPS = {
-            radish: { name: 'ラディッシュ', icon: '🌱', growSec: 10, buyCost: 20, basePrice: 45, reqLevel: 1, img: 'https://images.unsplash.com/photo-1566842600175-e76042b1aa18?auto=format&fit=crop&w=120&q=80' },
-            carrot: { name: 'にんじん', icon: '🥕', growSec: 25, buyCost: 50, basePrice: 120, reqLevel: 1, img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=120&q=80' },
-            tomato: { name: 'トマト', icon: '🍅', growSec: 60, buyCost: 120, basePrice: 310, reqLevel: 2, img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=120&q=80' },
-            strawberry: { name: 'いちご', icon: '🍓', growSec: 120, buyCost: 300, basePrice: 850, reqLevel: 3, img: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=120&q=80' },
-            pumpkin: { name: 'かぼちゃ', icon: '🎃', growSec: 300, buyCost: 800, basePrice: 2400, reqLevel: 4, img: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=120&q=80' }
+            radish: { 
+                name: 'ラディッシュ', 
+                icon: '🌱', 
+                growSec: 10, 
+                buyCost: 20, 
+                basePrice: 45, 
+                xp: 15,
+                reqLevel: 1, 
+                img: 'https://images.unsplash.com/photo-1592394533824-9440e5d68530?auto=format&fit=crop&w=150&q=80' 
+            },
+            carrot: { 
+                name: 'にんじん', 
+                icon: '🥕', 
+                growSec: 25, 
+                buyCost: 50, 
+                basePrice: 120, 
+                xp: 35,
+                reqLevel: 1, 
+                img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=150&q=80' 
+            },
+            tomato: { 
+                name: 'トマト', 
+                icon: '🍅', 
+                growSec: 60, 
+                buyCost: 120, 
+                basePrice: 310, 
+                xp: 75,
+                reqLevel: 2, 
+                img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=150&q=80' 
+            },
+            strawberry: { 
+                name: 'いちご', 
+                icon: '🍓', 
+                growSec: 120, 
+                buyCost: 300, 
+                basePrice: 850, 
+                xp: 180,
+                reqLevel: 3, 
+                img: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=150&q=80' 
+            },
+            pumpkin: { 
+                name: 'かぼちゃ', 
+                icon: '🎃', 
+                growSec: 300, 
+                buyCost: 800, 
+                basePrice: 2400, 
+                xp: 450,
+                reqLevel: 4, 
+                img: 'https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=150&q=80' 
+            }
         };
 
         const ITEMS = {
-            fertilizer: { name: '高速成長肥料', desc: '選択した作物の成長時間を30秒短縮', price: 80, icon: '🧪' }
+            fertilizer: { name: '高速成長肥料', desc: '作物の成長時間を30秒大幅短縮！', price: 60, icon: '🧪' },
+            harvestFertilizer: { name: '豊作倍増肥料', desc: '収穫時の取れ高が2倍（2個獲得）！', price: 150, icon: '🌟' },
+            goldenFertilizer: { name: '奇跡の金肥料', desc: '一瞬で即収穫！しかも売却額が2倍！', price: 350, icon: '✨' }
         };
+
+        // Calculate XP required for next level
+        function getRequiredXp(level) {
+            return level * 100;
+        }
 
         // Default Game State
         let gameState = {
             gold: 500,
             level: 1,
+            xp: 0,
             totalSales: 0,
-            inventory: { radish: 2 }, // Harvested veggies
-            seeds: { radish: 3, carrot: 1 }, // Seed count
-            items: { fertilizer: 2 },
+            inventory: { radish: 2 },
+            seeds: { radish: 3, carrot: 1 },
+            items: { fertilizer: 2, harvestFertilizer: 1, goldenFertilizer: 0 },
             plots: [
-                { cropId: null, plantedAt: 0, watered: false },
-                { cropId: null, plantedAt: 0, watered: false },
-                { cropId: null, plantedAt: 0, watered: false },
-                { cropId: null, plantedAt: 0, watered: false },
-                { cropId: null, plantedAt: 0, watered: false },
-                { cropId: null, plantedAt: 0, watered: false }
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false },
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false },
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false },
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false },
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false },
+                { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false }
             ]
         };
 
@@ -517,7 +590,7 @@
         }
 
         // -------------------------------------------------------------
-        // FIRESTORE STORAGE SYNC (RULE 1 & 2 SAFE)
+        // FIRESTORE STORAGE SYNC
         // -------------------------------------------------------------
         async function loadUserData() {
             if (!currentUser) return;
@@ -527,7 +600,11 @@
                 if (snap.exists()) {
                     const data = snap.data();
                     if (data.gameState) {
-                        gameState = { ...gameState, ...data.gameState };
+                        gameState = { 
+                            ...gameState, 
+                            ...data.gameState,
+                            items: { ...gameState.items, ...(data.gameState.items || {}) }
+                        };
                     }
                 } else {
                     await saveUserData();
@@ -572,6 +649,34 @@
         function renderHeaderStats() {
             document.getElementById('goldDisplay').innerText = gameState.gold.toLocaleString();
             document.getElementById('levelDisplay').innerText = gameState.level;
+            
+            // Experience Points Bar Calculation
+            const currentXp = gameState.xp || 0;
+            const reqXp = getRequiredXp(gameState.level);
+            const xpPct = Math.min(100, Math.floor((currentXp / reqXp) * 100));
+
+            document.getElementById('xpDisplay').innerText = currentXp;
+            document.getElementById('nextXpDisplay').innerText = reqXp;
+            document.getElementById('xpProgressBar').style.width = `${xpPct}%`;
+        }
+
+        function addExperience(amount) {
+            gameState.xp = (gameState.xp || 0) + amount;
+            let reqXp = getRequiredXp(gameState.level);
+
+            let leveledUp = false;
+            while (gameState.xp >= reqXp) {
+                gameState.xp -= reqXp;
+                gameState.level++;
+                reqXp = getRequiredXp(gameState.level);
+                leveledUp = true;
+            }
+
+            if (leveledUp) {
+                const rewardGold = gameState.level * 200;
+                gameState.gold += rewardGold;
+                showToast(`🎉 🎉 レベルアップ！ Lv.${gameState.level} に到達！ ボーナス +${rewardGold}G ゲット！`);
+            }
         }
 
         function renderFarmGrid() {
@@ -599,7 +704,7 @@
                     const crop = CROPS[plot.cropId];
                     const now = Math.floor(Date.now() / 1000);
                     const elapsed = now - plot.plantedAt;
-                    const growTime = plot.watered ? crop.growSec * 0.7 : crop.growSec; // 30% boost if watered
+                    const growTime = plot.watered ? crop.growSec * 0.7 : crop.growSec; 
                     const progress = Math.min(100, Math.floor((elapsed / growTime) * 100));
                     const isReady = progress >= 100;
 
@@ -611,12 +716,18 @@
                     } else if (progress < 100) {
                         stageGraphic = `<div class="text-3xl">🌿</div>`;
                     } else {
-                        stageGraphic = `<img src="${crop.img}" class="w-14 h-14 object-cover rounded-full border-2 border-amber-300 shadow-md crop-pop-anim">`;
+                        stageGraphic = `
+                            <div class="relative">
+                                <img src="${crop.img}" class="w-14 h-14 object-cover rounded-full border-2 ${plot.isGolden ? 'border-amber-400 ring-4 ring-yellow-300' : 'border-amber-300'} shadow-md crop-pop-anim">
+                                ${plot.isGolden ? '<span class="absolute -top-1 -right-1 text-xs">✨</span>' : ''}
+                                ${plot.boostHarvest ? '<span class="absolute -bottom-1 -right-1 text-xs">🌟</span>' : ''}
+                            </div>
+                        `;
                     }
 
                     statusContent = `
                         <div class="text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                            <span>${crop.name}</span>
+                            <span>${crop.name}${plot.isGolden ? ' (金)' : ''}</span>
                         </div>
 
                         <div class="my-auto flex flex-col items-center justify-center">
@@ -633,8 +744,11 @@
                                     <div class="bg-emerald-400 h-full transition-all duration-500" style="width: ${progress}%"></div>
                                 </div>
                                 <div class="flex justify-between items-center text-[10px] text-amber-200">
-                                    <span>${Math.ceil(growTime - elapsed)}秒</span>
-                                    ${!plot.watered ? `<button onclick="waterPlot(${index})" class="text-sky-300 hover:underline"><i class="fa-solid fa-droplet"></i> 水やり</button>` : '<span class="text-sky-300">水やり済</span>'}
+                                    <span>${Math.max(0, Math.ceil(growTime - elapsed))}秒</span>
+                                    <div class="flex items-center gap-1">
+                                        ${!plot.watered ? `<button onclick="waterPlot(${index})" class="text-sky-300 hover:underline"><i class="fa-solid fa-droplet"></i> 水</button>` : ''}
+                                        <button onclick="openFertilizerModal(${index})" class="text-amber-300 hover:underline font-bold"><i class="fa-solid fa-flask"></i> 肥料</button>
+                                    </div>
                                 </div>
                             `}
                         </div>
@@ -668,11 +782,11 @@
                             <img src="${crop.img}" class="w-10 h-10 rounded-lg object-cover">
                             <div>
                                 <p class="font-bold text-sm text-slate-800">${crop.name}</p>
-                                <p class="text-[10px] text-slate-500">成長時間: ${crop.growSec}秒 | 売却目安: ${crop.basePrice}G</p>
+                                <p class="text-[10px] text-slate-500">成長: ${crop.growSec}秒 | 売却: ${crop.basePrice}G | +${crop.xp}XP</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg">所持: ${count}個</span>
+                            <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg">所持: ${count}包</span>
                         </div>
                     `;
                     list.appendChild(item);
@@ -700,7 +814,9 @@
             gameState.plots[selectedPlotIndex] = {
                 cropId: cropId,
                 plantedAt: Math.floor(Date.now() / 1000),
-                watered: false
+                watered: false,
+                boostHarvest: false,
+                isGolden: false
             };
 
             closeModal('plantModal');
@@ -735,6 +851,74 @@
             }
         };
 
+        // FERTILIZER SELECTION MODAL
+        window.openFertilizerModal = (plotIndex) => {
+            selectedPlotIndex = plotIndex;
+            const list = document.getElementById('fertilizerModalList');
+            list.innerHTML = '';
+
+            let hasItems = false;
+            Object.keys(ITEMS).forEach(itemId => {
+                const item = ITEMS[itemId];
+                const count = gameState.items[itemId] || 0;
+                if (count > 0) {
+                    hasItems = true;
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-3 bg-slate-50 border rounded-xl hover:bg-amber-50 transition cursor-pointer';
+                    div.onclick = () => applyFertilizer(itemId);
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="text-2xl">${item.icon}</div>
+                            <div>
+                                <p class="font-bold text-sm text-slate-800">${item.name}</p>
+                                <p class="text-[10px] text-slate-500">${item.desc}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-1 rounded-lg">所持: ${count}個</span>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+
+            if (!hasItems) {
+                list.innerHTML = `
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        <i class="fa-solid fa-flask text-2xl mb-2 text-slate-300"></i>
+                        <p>使用できる肥料を持っていません。</p>
+                        <p class="text-[10px] text-amber-600 font-bold mt-1">「ショップ」で購入できます！</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('fertilizerModal').classList.remove('hidden');
+        };
+
+        window.applyFertilizer = (itemId) => {
+            if (selectedPlotIndex === null) return;
+            const plot = gameState.plots[selectedPlotIndex];
+            if (!plot || !plot.cropId) return;
+
+            if ((gameState.items[itemId] || 0) <= 0) return;
+
+            gameState.items[itemId]--;
+
+            if (itemId === 'fertilizer') {
+                plot.plantedAt -= 30;
+                showToast("🧪 高速成長肥料を使用！成長時間を30秒短縮しました！");
+            } else if (itemId === 'harvestFertilizer') {
+                plot.boostHarvest = true;
+                showToast("🌟 豊作倍増肥料を使用！収穫量が2倍になります！");
+            } else if (itemId === 'goldenFertilizer') {
+                plot.plantedAt = 0;
+                plot.isGolden = true;
+                showToast("✨ 奇跡の金肥料を使用！即時成長＆黄金の高品質作物になりました！");
+            }
+
+            closeModal('fertilizerModal');
+            saveUserData();
+            renderAll();
+        };
+
         window.harvestPlot = (index) => {
             const plot = gameState.plots[index];
             if (!plot || !plot.cropId) return;
@@ -742,51 +926,49 @@
             const cropId = plot.cropId;
             const crop = CROPS[cropId];
 
-            gameState.inventory[cropId] = (gameState.inventory[cropId] || 0) + 1;
-            gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false };
+            const qty = plot.boostHarvest ? 2 : 1;
+            const key = plot.isGolden ? `${cropId}_golden` : cropId;
 
-            // Level XP Progress
-            checkLevelUp();
+            gameState.inventory[key] = (gameState.inventory[key] || 0) + qty;
+            gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false };
+
+            addExperience(crop.xp * qty);
 
             saveUserData();
             renderAll();
-            showToast(`${crop.name}を収穫しました！市場で売却できます。`);
+            showToast(`${crop.name}${plot.isGolden ? ' (金)' : ''}を${qty}個収穫！ +${crop.xp * qty}XP獲得！`);
         };
 
         window.harvestAllPlots = () => {
             const now = Math.floor(Date.now() / 1000);
             let harvestedCount = 0;
+            let totalXpGained = 0;
 
             gameState.plots.forEach((plot, index) => {
                 if (plot.cropId) {
                     const crop = CROPS[plot.cropId];
                     const growTime = plot.watered ? crop.growSec * 0.7 : crop.growSec;
                     if ((now - plot.plantedAt) >= growTime) {
-                        gameState.inventory[plot.cropId] = (gameState.inventory[plot.cropId] || 0) + 1;
-                        gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false };
-                        harvestedCount++;
+                        const qty = plot.boostHarvest ? 2 : 1;
+                        const key = plot.isGolden ? `${plot.cropId}_golden` : plot.cropId;
+
+                        gameState.inventory[key] = (gameState.inventory[key] || 0) + qty;
+                        gameState.plots[index] = { cropId: null, plantedAt: 0, watered: false, boostHarvest: false, isGolden: false };
+                        harvestedCount += qty;
+                        totalXpGained += crop.xp * qty;
                     }
                 }
             });
 
             if (harvestedCount > 0) {
-                checkLevelUp();
+                addExperience(totalXpGained);
                 saveUserData();
                 renderAll();
-                showToast(`${harvestedCount}個の作物を一括収穫しました！`);
+                showToast(`${harvestedCount}個の作物を一括収穫！ +${totalXpGained}XP獲得！`);
             } else {
                 showToast("収穫可能な作物がありません");
             }
         };
-
-        function checkLevelUp() {
-            const totalCrops = Object.values(gameState.inventory).reduce((a, b) => a + b, 0);
-            const newLevel = Math.floor(totalCrops / 10) + 1;
-            if (newLevel > gameState.level) {
-                gameState.level = newLevel;
-                showToast(`🎉 農場レベルが Lv.${newLevel} にアップしました！新しい種が解禁！`);
-            }
-        }
 
         // Timer Loop for growth updates
         setInterval(() => {
@@ -883,23 +1065,30 @@
 
             let totalItems = 0;
 
-            Object.keys(gameState.inventory).forEach(cropId => {
-                const count = gameState.inventory[cropId] || 0;
+            Object.keys(gameState.inventory).forEach(key => {
+                const count = gameState.inventory[key] || 0;
                 if (count > 0) {
                     totalItems += count;
+                    const isGolden = key.endsWith('_golden');
+                    const cropId = isGolden ? key.replace('_golden', '') : key;
                     const crop = CROPS[cropId];
+                    if (!crop) return;
+
+                    const price = isGolden ? crop.basePrice * 2 : crop.basePrice;
+                    const xpGained = Math.floor(crop.xp / 2);
+
                     const div = document.createElement('div');
                     div.className = 'bg-slate-50 border rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition';
                     div.innerHTML = `
                         <div class="flex items-center space-x-3">
-                            <img src="${crop.img}" class="w-12 h-12 rounded-xl object-cover border">
+                            <img src="${crop.img}" class="w-12 h-12 rounded-xl object-cover border ${isGolden ? 'ring-2 ring-amber-400' : ''}">
                             <div>
-                                <h4 class="font-bold text-slate-800 text-sm">${crop.name}</h4>
-                                <p class="text-xs text-slate-500">単価: <span class="font-bold text-amber-600">${crop.basePrice}G</span></p>
+                                <h4 class="font-bold text-slate-800 text-sm">${crop.name}${isGolden ? ' (黄金)' : ''}</h4>
+                                <p class="text-xs text-slate-500">単価: <span class="font-bold text-amber-600">${price}G</span> (+${xpGained}XP)</p>
                                 <p class="text-[11px] text-emerald-700 font-bold">在庫: ${count}個</p>
                             </div>
                         </div>
-                        <button onclick="sellCrop('${cropId}')" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow">
+                        <button onclick="sellCrop('${key}')" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow">
                             売却
                         </button>
                     `;
@@ -918,46 +1107,63 @@
             }
         }
 
-        window.sellCrop = (cropId) => {
-            const count = gameState.inventory[cropId] || 0;
+        window.sellCrop = (key) => {
+            const count = gameState.inventory[key] || 0;
             if (count <= 0) return;
 
+            const isGolden = key.endsWith('_golden');
+            const cropId = isGolden ? key.replace('_golden', '') : key;
             const crop = CROPS[cropId];
-            const earned = crop.basePrice;
+            if (!crop) return;
 
-            gameState.inventory[cropId]--;
+            const earned = isGolden ? crop.basePrice * 2 : crop.basePrice;
+            const xpGained = Math.floor(crop.xp / 2);
+
+            gameState.inventory[key]--;
             gameState.gold += earned;
             gameState.totalSales += earned;
 
+            addExperience(xpGained);
+
             saveUserData();
             renderAll();
-            showToast(`${crop.name}を1個売却し、+${earned}G 獲得！`);
+            showToast(`${crop.name}を出荷して +${earned}G & +${xpGained}XP 獲得！`);
         };
 
         window.sellAllCrops = () => {
             let earnedTotal = 0;
-            Object.keys(gameState.inventory).forEach(cropId => {
-                const count = gameState.inventory[cropId] || 0;
+            let totalXp = 0;
+
+            Object.keys(gameState.inventory).forEach(key => {
+                const count = gameState.inventory[key] || 0;
                 if (count > 0) {
+                    const isGolden = key.endsWith('_golden');
+                    const cropId = isGolden ? key.replace('_golden', '') : key;
                     const crop = CROPS[cropId];
-                    earnedTotal += crop.basePrice * count;
-                    gameState.inventory[cropId] = 0;
+                    if (crop) {
+                        const price = isGolden ? crop.basePrice * 2 : crop.basePrice;
+                        earnedTotal += price * count;
+                        totalXp += Math.floor(crop.xp / 2) * count;
+                        gameState.inventory[key] = 0;
+                    }
                 }
             });
 
             if (earnedTotal > 0) {
                 gameState.gold += earnedTotal;
                 gameState.totalSales += earnedTotal;
+                addExperience(totalXp);
+
                 saveUserData();
                 renderAll();
-                showToast(`すべての収穫物を売却し、+${earnedTotal.toLocaleString()}G 獲得しました！`);
+                showToast(`すべての収穫物を売却し、+${earnedTotal.toLocaleString()}G & +${totalXp}XP 獲得しました！`);
             } else {
                 showToast("売却できる野菜がありません");
             }
         };
 
         // -------------------------------------------------------------
-        // FRIEND & CHAT LOGIC (RULE 1 & 2 SAFE)
+        // FRIEND & CHAT LOGIC
         // -------------------------------------------------------------
         window.openAddFriendModal = () => {
             if (!currentUser || currentUser.isAnonymous) {
@@ -987,7 +1193,6 @@
             }
 
             try {
-                // RULE 1: Public request path
                 const requestRef = doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', `${targetUid}_${currentUser.uid}`);
                 await setDoc(requestRef, {
                     toUid: targetUid,
@@ -1007,7 +1212,6 @@
 
         function listenToFriendRequests() {
             if (!currentUser) return;
-            // Fetch requests sent to current user
             const reqQuery = collection(db, 'artifacts', appId, 'public', 'data', 'friendRequests');
             onSnapshot(reqQuery, (snapshot) => {
                 const container = document.getElementById('friendRequestsContainer');
@@ -1032,20 +1236,17 @@
 
         window.acceptFriend = async (fromUid, fromName, reqDocId) => {
             try {
-                // Add to my friend collection (RULE 1 safe path)
                 await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'friends', fromUid), {
                     uid: fromUid,
                     name: fromName,
                     addedAt: serverTimestamp()
                 });
-                // Add reciprocal friend for opponent
                 await setDoc(doc(db, 'artifacts', appId, 'users', fromUid, 'friends', currentUser.uid), {
                     uid: currentUser.uid,
                     name: currentUser.displayName || '匿名農家',
                     addedAt: serverTimestamp()
                 });
 
-                // Update request
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', reqDocId), {
                     status: 'accepted'
                 });
@@ -1110,7 +1311,6 @@
                 const msgList = document.getElementById('chatMessageList');
                 msgList.innerHTML = '';
 
-                // Client-side sort by timestamp to avoid composite index requirements
                 const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 docs.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
 
@@ -1169,7 +1369,6 @@
                 tbody.innerHTML = '';
 
                 let list = snapshot.docs.map(d => d.data());
-                // Sort in JS memory to satisfy Rule 2
                 list.sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0));
 
                 if (list.length === 0) {
@@ -1227,24 +1426,23 @@
             }, 3000);
         }
 
-        // -------------------------------------------------------------
         // ASSIGNMENT MEMO GENERATOR
-        // -------------------------------------------------------------
         document.getElementById('openSubmitMemoBtn').addEventListener('click', () => {
             const memoContainer = document.getElementById('submitMemoText');
             memoContainer.innerHTML = `
 1. GitHubリポジトリのURL: (ご自身のGitHubリポジトリURLを記入)
 2. アプリの公開URL: https://saa24025-hub.github.io/yasaisaibai/
-3. アプリ名: 本格！アグリファーム＆フレンドチャット
-4. 保存データ: 資金(G)、農場レベル、種・肥料の所持数、畑の成長状態、出荷実績、フレンド関係・チャット履歴
+3. アプリ名: 本格！アグリファーム＆フレンドチャット DX
+4. 保存データ: 資金(G)、農場レベル・XP、種・肥料の所持数、畑の成長状態、出荷実績、フレンド関係・チャット履歴
 5. 工夫した点: 
- - リアルな土の畝（うね）デザインと水やり時の湿り気演出
- - 作物を売った資金で市場から種や肥料を購入する本格経営ループ
+ - 収穫や出荷で経験値(XP)を獲得してレベルアップするシステムと視覚的なXPゲージ
+ - 成長促進・豊作倍増・奇跡の金肥料など多彩なアイテムと狙った作物にあげられる肥料ダイアログ
+ - リアルな土の畝（うね）デザインと水やり・肥料効果の視覚演出
  - Firebaseを使用したリアルタイム1対1フレンドチャットと全国出荷額ランキング機能
 6. 苦労した点と解決方法:
  - Googleログイン時に auth/unauthorized-domain エラーが発生したため、Firebase Consoleの認証ドメイン設定に "saa24025-hub.github.io" を登録して解決しました。
 7. 未完成の部分・追加したい機能: 季節ごとの天候変化イベントや共同農場の追加
-8. 生成AIの利用: UIデザイン、Firebase同期ロジック、リアルタイムチャット構造のコード実装で利用
+8. 生成AIの利用: UIデザイン、Firebase同期ロジック、経験値計算・肥料選択ダイアログの実装で利用
 9. 感想: フロントエンド（画面）とバックエンド（Firestore）がリアルタイムに連動するアプリ開発の楽しさを学びました。
             `;
             document.getElementById('submitMemoModal').classList.remove('hidden');
